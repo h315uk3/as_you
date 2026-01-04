@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Install dependencies with mise
+        run: mise install
+
+      - name: Run lint
+        run: mise run lint
+
+      - name: Run tests
+        run: mise run test
+
+      - name: Run validation
+        run: mise run validate
+
+      - name: Test summary
+        if: always()
+        run: |
+          echo "::notice::All checks completed"

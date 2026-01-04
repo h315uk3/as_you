@@ -1,0 +1,86 @@
+# As You Plugin - Development Tools
+
+[tools]
+bats = "1.13.0"       # Test framework for Bash
+jq = "1.8.1"          # Command-line JSON processor
+shellcheck = "0.11.0" # Shell script linter
+shfmt = "3.12.0"      # Shell script formatter
+rust = "1.92.0"       # Rust toolchain for MCP development
+
+[tasks.test]
+description = "Run all tests"
+run = "bats tests/unit/*.bats tests/integration/*.bats tests/validation/*.bats"
+
+[tasks."test:unit"]
+description = "Run unit tests"
+run = "bats tests/unit/*.bats"
+
+[tasks."test:integration"]
+description = "Run integration tests"
+run = "bats tests/integration/*.bats"
+
+[tasks."test:validation"]
+description = "Run validation tests"
+run = "bats tests/validation/*.bats"
+
+[tasks."test:watch"]
+description = "Run tests in watch mode"
+run = """
+while true; do
+  clear
+  echo "Running tests..."
+  bats tests/**/*.bats
+  echo ""
+  echo "Waiting for changes... (Ctrl+C to exit)"
+  sleep 5
+done
+"""
+
+[tasks.lint]
+description = "Check shell scripts with shellcheck"
+run = "shellcheck scripts/*.sh hooks/*.sh"
+
+[tasks.format]
+description = "Format shell scripts with shfmt"
+run = "shfmt -w scripts/*.sh hooks/*.sh"
+
+[tasks.validate]
+description = "Validate plugin configuration"
+run = """
+echo "Validating plugin.json..."
+jq '.' .claude-plugin/plugin.json > /dev/null && echo "✓ plugin.json is valid"
+
+echo "Validating hooks.json..."
+jq '.' hooks/hooks.json > /dev/null && echo "✓ hooks.json is valid"
+
+echo "Validating frontmatter..."
+mise run test:validation
+"""
+
+[tasks."scoring:tfidf"]
+description = "Calculate TF-IDF scores for all patterns"
+run = "bash scripts/calculate-tfidf.sh"
+
+[tasks."scoring:pmi"]
+description = "Calculate PMI scores for co-occurrences"
+run = "bash scripts/calculate-pmi.sh"
+
+[tasks."scoring:decay"]
+description = "Calculate time decay scores for patterns"
+run = "bash scripts/calculate-time-decay.sh"
+
+[tasks."scoring:composite"]
+description = "Calculate composite scores (runs all scoring)"
+run = """
+bash scripts/calculate-tfidf.sh &&
+bash scripts/calculate-pmi.sh &&
+bash scripts/calculate-time-decay.sh &&
+bash scripts/calculate-composite-score.sh
+"""
+
+# Note: scoring:show, patterns:similar, patterns:merge, patterns:promote have been
+# removed as they are now available as slash commands:
+#   /as-you:show-scores
+#   /as-you:detect-similar-patterns
+#   /as-you:merge-patterns
+#   (patterns:promote is automatically executed by promote commands)

@@ -1,0 +1,23 @@
+# Claude Code local settings
+.claude/settings.local.json
+.claude/CLAUDE.md
+.claude/output-styles/
+
+# As You plugin - runtime-generated data (user local only)
+.claude/as-you/
+
+# Local tools directory
+.tools/
+
+# Development documentation (internal use only)
+doc/
+
+# Node modules and build artifacts
+node_modules/
+dist/
+build/
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
