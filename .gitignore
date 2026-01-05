@@ -21,6 +21,11 @@ build/
 # Test coverage reports
 coverage/
 
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
 # OS-specific files
 .DS_Store
 Thumbs.db
