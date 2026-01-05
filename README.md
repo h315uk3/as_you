@@ -19,17 +19,17 @@ A Claude Code plugin that extracts and accumulates patterns from your session no
 ```
 1. During Session
    /as-you:note "Investigating authentication feature bug"
-   → Saved to .claude/as-you/session-notes.local.md
+   → Saved to .claude/as_you/session_notes.local.md
 
 2. On SessionEnd (Automatic)
-   → Archive session-notes.local.md
-   → Save as .claude/as-you/session-archive/2026-01-04.md
+   → Archive session_notes.local.md
+   → Save as .claude/as_you/session_archive/2026-01-04.md
 
 3. Pattern Extraction & Scoring (Automatic)
    → Extract words from archive
    → Calculate TF-IDF, PMI, time-decay scores
    → Auto-merge similar patterns (Levenshtein distance)
-   → Save to .claude/as-you/pattern-tracker.json
+   → Save to .claude/as_you/pattern_tracker.json
 
 4. Promotion Notification (Automatic)
    → Display patterns with composite score > 0.3 as promotion candidates

@@ -1,10 +1,11 @@
 #!/bin/bash
+set -u
 # Clean up old archives (older than 7 days)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
-ARCHIVE_DIR="$CLAUDE_DIR/as-you/session-archive"
+ARCHIVE_DIR="$CLAUDE_DIR/as_you/session_archive"
 
 # Check if archive directory exists
 if [ ! -d "$ARCHIVE_DIR" ]; then

@@ -1,6 +1,6 @@
 ---
 name: memory-analyzer
-description: "Analyze memory patterns from pattern-tracker.json and suggest skill/agent promotion. Use this agent when analyzing memory patterns, detecting frequent patterns, or suggesting knowledge base promotion."
+description: "Analyze memory patterns from pattern_tracker.json and suggest skill/agent promotion. Use this agent when analyzing memory patterns, detecting frequent patterns, or suggesting knowledge base promotion."
 tools: Read, Bash
 model: inherit
 color: blue
@@ -12,14 +12,14 @@ You are a specialized agent for analyzing As You plugin memory patterns.
 
 ## Responsibilities
 
-Analyze pattern-tracker.json and suggest promotion of frequent patterns to knowledge base (Skills/Agents).
+Analyze pattern_tracker.json and suggest promotion of frequent patterns to knowledge base (Skills/Agents).
 
 ## Execution Steps
 
 1. Execute `./scripts/suggest-promotions.sh` using Bash tool to retrieve promotion candidates
 2. If 0 candidates:
    - Report: "No knowledge base promotion candidates currently available"
-   - Display current pattern count (`jq '.patterns | length' .claude/as-you/pattern-tracker.json`)
+   - Display current pattern count (`jq '.patterns | length' .claude/as_you/pattern_tracker.json`)
 3. If candidates exist:
    - Analyze details of each candidate
    - Report with priorities

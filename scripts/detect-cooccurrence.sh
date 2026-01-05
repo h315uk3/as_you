@@ -1,10 +1,11 @@
 #!/bin/bash
+set -u
 # Detect word co-occurrences within same memo lines
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
-ARCHIVE_DIR="$CLAUDE_DIR/as-you/session-archive"
+ARCHIVE_DIR="$CLAUDE_DIR/as_you/session_archive"
 
 # Check if archive directory exists
 if [ ! -d "$ARCHIVE_DIR" ]; then
@@ -24,9 +25,19 @@ cat "$ARCHIVE_DIR"/*.md 2>/dev/null |
 		# Extract words from line (3+ chars, lowercase)
 		words=$(echo "$line" | grep -oE '[a-zA-Z]{3,}' | tr '[:upper:]' '[:lower:]' | sort -u)
 
-		# Generate word pairs from this line
-		mapfile -t word_array <<<"$words"
+		# Skip empty lines or lines without words
+		if [ -z "$words" ] || [ "$words" = "" ]; then
+			continue
+		fi
+
+		# Convert words to array (compatible with bash 3.2+)
+		read -r -a word_array <<< "$words"
 		word_count=${#word_array[@]}
+		
+		# Need at least 2 words for a pair
+		if [ "$word_count" -lt 2 ]; then
+			continue
+		fi
 
 		# Generate all pairs (combinations)
 		for ((i = 0; i < word_count; i++)); do

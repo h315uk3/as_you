@@ -25,7 +25,7 @@ Save a sequence of recent work as a reusable slash command.
    - **Scope**: All recent work or select specific steps (present options)
 
 3. **Generate Slash Command**
-   Save as `.claude/commands/{command-name}.md`:
+   Save as `commands/{command-name}.md`:
    ```markdown
    <!-- Description -->
 
@@ -65,7 +65,7 @@ Recent work:
 
 ↓ After saving
 
-`.claude/commands/qa-check.md`:
+`commands/qa-check.md`:
 ```markdown
 Run quality checks on the current project.
 

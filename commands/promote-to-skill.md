@@ -35,7 +35,7 @@ For selected pattern:
 
 1. Organize context information:
    ```bash
-   jq -r '.patterns["selected_pattern"].contexts[]' .claude/as-you/session-archive/pattern-tracker.json
+   jq -r '.patterns["selected_pattern"].contexts[]' .claude/as_you/pattern_tracker.json
    ```
 
 2. Generate draft using plugin-dev:skill-development skill:
@@ -50,7 +50,7 @@ For selected pattern:
    - If "Create": Create `skills/{suggested_name}/SKILL.md`
    - If "Modify and create": Ask user for modifications then create
 
-5. Update pattern-tracker.json:
+5. Update pattern_tracker.json:
    ```bash
    # Mark promotion status (also record promoted_to, promoted_at, promoted_path)
    ./scripts/mark-promoted.sh "selected_pattern" skill "skills/{skill-name}/"

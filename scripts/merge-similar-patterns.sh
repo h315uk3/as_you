@@ -1,14 +1,15 @@
 #!/bin/bash
+set -u
 # Merge similar patterns based on Levenshtein distance
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
-TRACKER_FILE="$CLAUDE_DIR/as-you/pattern-tracker.json"
+TRACKER_FILE="$CLAUDE_DIR/as_you/pattern_tracker.json"
 
 # Check if tracker file exists
 if [ ! -f "$TRACKER_FILE" ]; then
-	echo "Error: pattern-tracker.json not found" >&2
+	echo "Error: pattern_tracker.json not found" >&2
 	exit 1
 fi
 

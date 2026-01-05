@@ -37,6 +37,6 @@ If $ARGUMENTS is provided, execute the following:
 1. Execute with Bash tool:
    ```bash
    mkdir -p .claude/as-you
-   echo "[$(date +%H:%M)] $ARGUMENTS" >> .claude/as-you/session-notes.local.md
+   echo "[$(date +%H:%M)] $ARGUMENTS" >> .claude/as_you/session_notes.local.md
    ```
 2. Respond: "Note added"

@@ -1,5 +1,6 @@
 ---
 description: Display pattern composite scores and rankings
+allowed-tools: [Bash]
 ---
 
 Display pattern scoring results.
@@ -7,7 +8,7 @@ Display pattern scoring results.
 Shows top 20 promotion candidates (composite_score > 0.3) with detailed scores (TF-IDF, freshness, session spread) and promotion reasons for each pattern.
 
 Execution:
-1. Read promotion_candidates from pattern-tracker.json
+1. Read promotion_candidates from pattern_tracker.json
 2. Format scores for readability
 3. Display with promotion reasons
 
@@ -25,13 +26,13 @@ Example output:
 ```
 
 ```bash
-if [ ! -f .claude/as-you/pattern-tracker.json ]; then
-  echo "❌ pattern-tracker.json not found"
+if [ ! -f .claude/as_you/pattern_tracker.json ]; then
+  echo "❌ pattern_tracker.json not found"
   echo "   Please end the session to execute pattern tracking first"
   exit 1
 fi
 
-CANDIDATE_COUNT=$(jq '.promotion_candidates | length' .claude/as-you/pattern-tracker.json 2>/dev/null || echo "0")
+CANDIDATE_COUNT=$(jq '.promotion_candidates | length' .claude/as_you/pattern_tracker.json 2>/dev/null || echo "0")
 
 if [ "$CANDIDATE_COUNT" -eq 0 ]; then
   echo "📊 No promotion candidates currently"
@@ -47,7 +48,7 @@ jq -r '.promotion_candidates[] |
   Occurrences: \(.count) times, Sessions: \(.sessions)
   TF-IDF: \(.tfidf | tonumber | . * 10 | floor / 10)
   Reason: \(.reason)
-"' .claude/as-you/pattern-tracker.json | head -20
+"' .claude/as_you/pattern_tracker.json | head -20
 
 echo ""
 echo "💡 Promotion commands:"

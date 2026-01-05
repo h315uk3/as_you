@@ -1,14 +1,21 @@
 #!/bin/bash
+set -u
 # Detect patterns from archived memos using simple word frequency
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
-ARCHIVE_DIR="$CLAUDE_DIR/as-you/session-archive"
+ARCHIVE_DIR="$CLAUDE_DIR/as_you/session_archive"
 
 # Check if archive directory exists
 if [ ! -d "$ARCHIVE_DIR" ]; then
-	echo "{}"
+	echo "[]"
+	exit 0
+fi
+
+# Check if there are any archives
+if ! ls "$ARCHIVE_DIR"/*.md >/dev/null 2>&1; then
+	echo "[]"
 	exit 0
 fi
 

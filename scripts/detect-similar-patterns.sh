@@ -1,12 +1,14 @@
 #!/bin/bash
+set -u
 # Detect similar patterns using Levenshtein distance
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
-TRACKER_FILE="$CLAUDE_DIR/as-you/pattern-tracker.json"
+TRACKER_FILE="$CLAUDE_DIR/as_you/pattern_tracker.json"
 
 # Load levenshtein function
+# shellcheck source=scripts/levenshtein.sh
 source "$SCRIPT_DIR/levenshtein.sh"
 
 # Check if tracker file exists

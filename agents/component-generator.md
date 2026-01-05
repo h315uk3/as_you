@@ -19,7 +19,7 @@ Generate appropriate skills or agents from memory patterns or user requirements.
 ### For Skill Generation
 
 1. Understand skill name and purpose
-2. Reference patterns from `.claude/session-archive/` (if available)
+2. Reference patterns from `.claude/as_you/session_archive/` (if available)
 3. Generate SKILL.md with the following structure:
    ```markdown
    ---

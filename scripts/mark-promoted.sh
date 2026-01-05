@@ -1,4 +1,5 @@
 #!/bin/bash
+set -u
 # Mark a pattern as promoted to skill or agent
 
 # Ensure PATH includes mise shims and common bin directories
@@ -10,7 +11,7 @@ export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
-TRACKER_FILE="$CLAUDE_DIR/as-you/pattern-tracker.json"
+TRACKER_FILE="$CLAUDE_DIR/as_you/pattern_tracker.json"
 
 # Usage
 usage() {
@@ -48,7 +49,7 @@ fi
 
 # Check if tracker file exists
 if [ ! -f "$TRACKER_FILE" ]; then
-	echo "Error: pattern-tracker.json not found" >&2
+	echo "Error: pattern_tracker.json not found" >&2
 	exit 1
 fi
 
@@ -63,13 +64,11 @@ fi
 CURRENT_DATE=$(date +%Y-%m-%d)
 
 # Update pattern with promotion info
-jq ".patterns.\"$PATTERN\".promoted = true | \
+if jq ".patterns.\"$PATTERN\".promoted = true | \
     .patterns.\"$PATTERN\".promoted_to = \"$TYPE\" | \
     .patterns.\"$PATTERN\".promoted_at = \"$CURRENT_DATE\" | \
     .patterns.\"$PATTERN\".promoted_path = \"$PATH\" | \
-    .patterns.\"$PATTERN\".keep_tracking = true" "$TRACKER_FILE" >"$TRACKER_FILE.tmp"
-
-if [ $? -eq 0 ]; then
+    .patterns.\"$PATTERN\".keep_tracking = true" "$TRACKER_FILE" >"$TRACKER_FILE.tmp"; then
 	mv "$TRACKER_FILE.tmp" "$TRACKER_FILE"
 	echo "✓ Pattern '$PATTERN' marked as promoted to $TYPE at $PATH"
 else

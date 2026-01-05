@@ -1,15 +1,16 @@
 #!/bin/bash
+set -u
 # Calculate TF-IDF scores for patterns
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
-ARCHIVE_DIR="$CLAUDE_DIR/as-you/session-archive"
-TRACKER_FILE="$CLAUDE_DIR/as-you/pattern-tracker.json"
+ARCHIVE_DIR="$CLAUDE_DIR/as_you/session_archive"
+TRACKER_FILE="$CLAUDE_DIR/as_you/pattern_tracker.json"
 
 # Check if tracker file exists
 if [ ! -f "$TRACKER_FILE" ]; then
-	echo "Error: pattern-tracker.json not found" >&2
+	echo "Error: pattern_tracker.json not found" >&2
 	exit 1
 fi
 
@@ -20,7 +21,7 @@ if [ ! -d "$ARCHIVE_DIR" ]; then
 fi
 
 # Count total documents (sessions)
-TOTAL_DOCS=$(ls "$ARCHIVE_DIR"/*.md 2>/dev/null | wc -l)
+TOTAL_DOCS=$(find "$ARCHIVE_DIR" -name "*.md" -type f 2>/dev/null | wc -l)
 if [ "$TOTAL_DOCS" -eq 0 ]; then
 	echo "Error: no archive files found" >&2
 	exit 1

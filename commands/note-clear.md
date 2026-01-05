@@ -11,7 +11,7 @@ Clear current session notes.
 
 1. Execute the following command with Bash tool:
    ```bash
-   > .claude/as-you/session-notes.local.md
+   > .claude/as_you/session_notes.local.md
    ```
 2. Respond: "Session notes cleared"
 
