@@ -19,7 +19,7 @@ Use this skill in the following cases:
 
 - **Proposing Plugin Improvements**: Identify improvement points in existing features
 - **Designing New Features**: Consider new features based on user feedback
-- **Usage Pattern Analysis**: Analyze usage trends from pattern-tracker.json etc.
+- **Usage Pattern Analysis**: Analyze usage trends from pattern_tracker.json etc.
 - **Performance Optimization**: Optimize scripts and hooks for efficiency
 - **Documentation Improvement**: Propose updates to help and README
 
@@ -33,7 +33,7 @@ Use this skill in the following cases:
 - Don't impose, provide options
 
 **Data-Driven**:
-- Utilize pattern-tracker.json
+- Utilize pattern_tracker.json
 - Base proposals on actual usage patterns
 - Propose from facts, not assumptions
 
@@ -107,7 +107,7 @@ Use this skill in the following cases:
 ### Example 1: Proposal from Usage Frequency Analysis
 
 ```
-Analysis of pattern-tracker.json revealed the following trends:
+Analysis of pattern_tracker.json revealed the following trends:
 
 - `memo` command is frequently used (average 8 times per session)
 - However, `memo-history` is rarely used (0.5 times/week)
@@ -142,7 +142,7 @@ This skill is automatically triggered when users ask:
 
 ### Analysis Data Sources
 
-- `.claude/session-archive/pattern-tracker.json` - Pattern frequency
+- `.claude/as_you/pattern_tracker.json` - Pattern frequency
 - `commands/` - Number and types of commands
 - `skills/` - Number of skills
 - `agents/` - Number of agents

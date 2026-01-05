@@ -1,6 +1,6 @@
 #!/bin/bash
 set -u
-# Archive session notes to session-archive
+# Archive session notes to session_archive
 
 # Load common library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -10,8 +10,8 @@ source "$SCRIPT_DIR/lib/common.sh"
 # Initialize paths
 init_paths
 
-MEMO_FILE="$CLAUDE_DIR/as-you/session-notes.local.md"
-ARCHIVE_DIR="$CLAUDE_DIR/as-you/session-archive"
+MEMO_FILE="$CLAUDE_DIR/as_you/session_notes.local.md"
+ARCHIVE_DIR="$CLAUDE_DIR/as_you/session_archive"
 
 # Ensure archive directory exists
 ensure_dir "$ARCHIVE_DIR"

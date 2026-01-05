@@ -11,7 +11,7 @@ Update an existing slash command with recent work or modifications.
 ## Process
 
 1. **List Existing Commands**
-   - Scan `.claude/commands/*.md` for available slash commands
+   - Scan `commands/*.md` for available slash commands
    - Display command names and their descriptions
    - Ask user which command to update
 
@@ -41,7 +41,7 @@ Update an existing slash command with recent work or modifications.
 
 6. **Confirmation**
    - Ask user to approve changes
-   - If approved, save to `.claude/commands/{command-name}.md`
+   - If approved, save to `commands/{command-name}.md`
    - If rejected, ask for modifications or cancel
 
 7. **Session Restart Required**
@@ -119,7 +119,7 @@ Apply changes? (y/n) > y
 - Example: "Step 3 already runs linter, but recent work adds stricter flags. Update step 3 with new parameters?"
 
 ### Version Control
-- Before updating, create backup as `.claude/commands/.backup/{command-name}.{timestamp}.md`
+- Before updating, create backup as `commands/.backup/{command-name}.{timestamp}.md`
 - Allow rollback with `/restore-workflow`
 
 ## Important Notes

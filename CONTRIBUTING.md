@@ -197,11 +197,11 @@ Execution flow:
 ### Pattern Extraction Flow
 
 ```
-Session Notes (.claude/as-you/session-notes.local.md)
+Session Notes (.claude/as_you/session_notes.local.md)
   ↓ Automatically run on SessionEnd
-Archive (.claude/as-you/session-archive/YYYY-MM-DD.md)
+Archive (.claude/as_you/session_archive/YYYY-MM-DD.md)
   ↓ Extract patterns and score
-Pattern Tracker (.claude/as-you/pattern-tracker.json)
+Pattern Tracker (.claude/as_you/pattern_tracker.json)
   ↓ Auto-detect promotion candidates
 Knowledge Base (skills/*/SKILL.md, agents/*.md)
 ```

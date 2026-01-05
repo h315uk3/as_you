@@ -4,7 +4,7 @@
 .claude/output-styles/
 
 # As You plugin - runtime-generated data (user local only)
-.claude/as-you/
+.claude/as_you/
 
 # Local tools directory
 .tools/

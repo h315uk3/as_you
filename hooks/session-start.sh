@@ -6,8 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$REPO_ROOT}"
 CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
-MEMO_FILE="$CLAUDE_DIR/as-you/session-notes.local.md"
-TRACKER_FILE="$CLAUDE_DIR/as-you/pattern-tracker.json"
+MEMO_FILE="$CLAUDE_DIR/as_you/session_notes.local.md"
+TRACKER_FILE="$CLAUDE_DIR/as_you/pattern_tracker.json"
 
 # Clean up old archives
 "${REPO_ROOT}/scripts/cleanup-archive.sh" 2>/dev/null || true

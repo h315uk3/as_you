@@ -145,6 +145,6 @@ init_as_you_dirs() {
 
 	local as_you_dir="$CLAUDE_DIR/as-you"
 	ensure_dir "$as_you_dir"
-	ensure_dir "$as_you_dir/session-archive"
-	init_tracker_file "$as_you_dir/pattern-tracker.json"
+	ensure_dir "$as_you_dir/session_archive"
+	init_tracker_file "$as_you_dir/pattern_tracker.json"
 }

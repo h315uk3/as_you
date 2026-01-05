@@ -9,7 +9,7 @@ Analyze frequent patterns and suggest knowledge base creation (Skills/Agents).
 
 ## Execution Steps
 
-1. Read `.claude/as-you/session-archive/pattern-tracker.json`
+1. Read `.claude/as_you/pattern_tracker.json`
 2. If file doesn't exist or `promotion_candidates` is empty:
    - Respond: "No knowledge base promotion candidates yet"
    - Guide: "Record memos across multiple sessions to detect frequent patterns"
@@ -17,7 +17,7 @@ Analyze frequent patterns and suggest knowledge base creation (Skills/Agents).
    - **Launch memory-analyzer agent using Task tool**:
      ```
      subagent_type: "memory-analyzer"
-     prompt: "Analyze pattern-tracker.json and suggest knowledge base promotion candidates"
+     prompt: "Analyze pattern_tracker.json and suggest knowledge base promotion candidates"
      description: "Analyze memory patterns"
      ```
    - Display agent analysis results

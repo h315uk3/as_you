@@ -5,8 +5,8 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
-ARCHIVE_DIR="$CLAUDE_DIR/as-you/session-archive"
-TRACKER_FILE="$PROJECT_ROOT/.claude/as-you/pattern-tracker.json"
+ARCHIVE_DIR="$CLAUDE_DIR/as_you/session_archive"
+TRACKER_FILE="$CLAUDE_DIR/as_you/pattern_tracker.json"
 
 # Output empty JSON if no tracker file
 if [ ! -f "$TRACKER_FILE" ]; then

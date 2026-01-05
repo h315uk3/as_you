@@ -48,18 +48,21 @@ Specialized knowledge automatically generated from frequent patterns
 - `/as-you:memory-analyze` - Analyze patterns and suggest knowledge base creation
 - `/as-you:promote-to-skill` - Promote frequent pattern to Skill
 - `/as-you:promote-to-agent` - Promote frequent task to Agent
+- `/as-you:show-scores` - Display pattern scores and rankings
 
 **Manual Creation**:
 - `/as-you:create-skill "name"` - Create skill (AI-assisted/manual)
 - `/as-you:create-agent "name"` - Create agent (AI-assisted/manual)
 
-**Maintenance**:
-- `/as-you:review-long-term-memory` - Suggest maintenance based on usage statistics
+**Pattern Management**:
+- `/as-you:detect-similar-patterns` - Detect and display similar patterns
+- `/as-you:merge-patterns` - Merge similar patterns interactively
+- `/as-you:review-long-term-memory` - Review skill/agent usage and suggest maintenance
 
 **Automation**:
 - Pattern appears in 3+ sessions or 5+ total occurrences
+- TF-IDF, co-occurrence, and time decay scoring
 - Automatic notification via SessionStart hook
-- Interactive knowledge base creation suggestions
 
 ---
 
@@ -98,7 +101,7 @@ Specialized knowledge automatically generated from frequent patterns
 
 ### SessionEnd (On Session End)
 - Archive session memos (skip if empty)
-- Update pattern frequencies
+- Update pattern frequencies (TF-IDF, co-occurrence, time decay)
 
 ---
 
@@ -106,11 +109,17 @@ Specialized knowledge automatically generated from frequent patterns
 
 ```
 .claude/
-├── short-term-memory.local.md  # Current session memos
-└── session-archive/             # Archives (7-day retention)
-    ├── 2026-01-03.md
-    ├── 2026-01-02.md
-    └── pattern-tracker.json  # Pattern tracking
+└── as_you/
+    ├── session_notes.local.md      # Current session memos
+    ├── pattern_tracker.json         # Pattern tracking (TF-IDF, scores)
+    └── session_archive/             # Archives (7-day retention)
+        ├── 2026-01-05.md
+        └── 2026-01-04.md
+
+plugins/as_you/
+├── commands/                        # Workflows and commands
+├── skills/                          # Knowledge base (Skills)
+└── agents/                          # Knowledge base (Agents)
 ```
 
 ---
@@ -125,6 +134,8 @@ Specialized knowledge automatically generated from frequent patterns
 1. Record thoughts in session memos
 2. Automatically detect frequent patterns
 3. Consolidate as knowledge base (Skills/Agents)
+
+**Data-Driven**: Uses TF-IDF, co-occurrence analysis, and time decay scoring
 
 ---
 

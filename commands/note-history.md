@@ -9,7 +9,7 @@ Display archived notes by date.
 
 ## Execution Steps
 
-1. Search `.claude/as-you/session-archive/*.md` using Glob tool
+1. Search `.claude/as_you/session_archive/*.md` using Glob tool
 2. If no files found:
    - Respond: "No archived notes found"
 3. If files found:

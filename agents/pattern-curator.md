@@ -1,6 +1,6 @@
 ---
 name: pattern-curator
-description: "Curate and maintain pattern quality in pattern-tracker.json. Use this agent when cleaning up patterns, merging duplicates, or auditing pattern database health."
+description: "Curate and maintain pattern quality in pattern_tracker.json. Use this agent when cleaning up patterns, merging duplicates, or auditing pattern database health."
 tools: Read, Bash, Write
 model: inherit
 color: cyan
@@ -22,7 +22,7 @@ Maintain high-quality pattern data by:
 ## Execution Steps
 
 1. **Load Pattern Database**
-   - Read `.claude/as-you/pattern-tracker.json`
+   - Read `.claude/as_you/pattern_tracker.json`
    - Validate JSON structure
    - Count total patterns and metadata
 
@@ -145,7 +145,7 @@ Available for cleanup:
 
 ## Notes
 
-- Always backup pattern-tracker.json before major changes
+- Always backup pattern_tracker.json before major changes
 - Consider user patterns valuable - don't auto-delete without confidence
 - Provide undo instructions for destructive operations
 - Optimize for pattern quality over quantity

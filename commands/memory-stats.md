@@ -19,17 +19,17 @@ Collect and display the following statistics:
 - Display: "Workflows: X"
 
 ### 2. Session Memo Statistics
-- Check if `.claude/as-you/session-notes.local.md` exists
+- Check if `.claude/as_you/session_notes.local.md` exists
 - If exists, count lines
 - Display: "Current session memos: X entries"
 
 ### 3. Archive Statistics
-- Search `.claude/as-you/session-archive/*.md` using Glob
+- Search `.claude/as_you/session_archive/*.md` using Glob
 - Count files
 - Display: "Archives: X days"
 
 ### 4. Pattern Detection Statistics
-- Check if `.claude/as-you/pattern-tracker.json` exists
+- Check if `.claude/as_you/pattern_tracker.json` exists
 - If exists, Read file and display:
   - Detected patterns: number of keys in `.patterns`
   - Knowledge base promotion candidates: length of `.promotion_candidates` array
