@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # SessionEnd hook: Archive session notes, track patterns, and merge similar patterns
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -12,15 +13,15 @@ PROJECT_ROOT="${PROJECT_ROOT:-$REPO_ROOT}"
 "${REPO_ROOT}/scripts/track-frequency.sh"
 
 # Merge similar patterns automatically
-echo "📊 類似パターンをチェック中..."
+echo "📊 Checking for similar patterns..."
 MERGE_OUTPUT=$("${REPO_ROOT}/scripts/merge-similar-patterns.sh" 2>&1)
-MERGE_COUNT=$(echo "$MERGE_OUTPUT" | grep -c "マージしました" 2>/dev/null || echo "0")
+MERGE_COUNT=$(echo "$MERGE_OUTPUT" | grep -c "Merged" 2>/dev/null || echo "0")
 
 if [ "$MERGE_COUNT" -gt 0 ]; then
-  echo "✅ ${MERGE_COUNT} 件のパターンをマージしました"
-  echo "$MERGE_OUTPUT" | grep "マージしました"
+  echo "✅ Merged ${MERGE_COUNT} similar patterns"
+  echo "$MERGE_OUTPUT" | grep "Merged"
 else
-  echo "✓ 類似パターンなし"
+  echo "✓ No similar patterns found"
 fi
 
 exit 0

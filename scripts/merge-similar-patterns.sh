@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Merge similar patterns based on Levenshtein distance
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

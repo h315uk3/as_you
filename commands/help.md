@@ -1,5 +1,6 @@
 ---
 description: "Display As You plugin help and usage guide"
+allowed-tools: []
 ---
 
 # As You Plugin Help

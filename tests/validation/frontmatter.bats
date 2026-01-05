@@ -35,6 +35,7 @@ has_valid_frontmatter() {
 }
 
 # Test: All commands have valid frontmatter
+# Note: Commands use filename as name, so 'name' field is optional
 @test "validation: all commands have valid frontmatter" {
     skip_count=0
 
@@ -42,7 +43,7 @@ has_valid_frontmatter() {
         # Skip README
         [[ "$(basename "$cmd")" == "README.md" ]] && continue
 
-        if ! has_valid_frontmatter "$cmd" "name" "description"; then
+        if ! has_valid_frontmatter "$cmd" "description"; then
             echo "Invalid frontmatter in: $(basename "$cmd")"
             ((skip_count++))
         fi
@@ -87,35 +88,34 @@ has_valid_frontmatter() {
     [ "$skip_count" -eq 0 ]
 }
 
-# Test: Commands have unique names
+# Test: Commands have unique names (based on filename)
 @test "validation: command names are unique" {
-    names=()
+    filenames=()
 
     for cmd in "$COMMANDS_DIR"/*.md; do
         [[ "$(basename "$cmd")" == "README.md" ]] && continue
 
-        name=$(sed -n '/^---$/,/^---$/p' "$cmd" | grep "^name:" | cut -d: -f2- | xargs)
-        if [ -n "$name" ]; then
-            # Check for duplicates
-            if [[ " ${names[@]} " =~ " ${name} " ]]; then
-                echo "Duplicate command name: $name"
-                return 1
-            fi
-            names+=("$name")
+        filename=$(basename "$cmd" .md)
+
+        # Check for duplicates
+        if [[ " ${filenames[@]} " =~ " ${filename} " ]]; then
+            echo "Duplicate command filename: $filename"
+            return 1
         fi
+        filenames+=("$filename")
     done
 
-    [ "${#names[@]}" -gt 0 ]
+    [ "${#filenames[@]}" -gt 0 ]
 }
 
 # Test: Sample valid frontmatter passes validation
 @test "validation: sample valid frontmatter passes" {
-    has_valid_frontmatter "$FIXTURES_DIR/sample-command.md" "name" "description"
+    has_valid_frontmatter "$FIXTURES_DIR/sample-command.md" "description"
 }
 
 # Test: Sample invalid frontmatter fails validation
 @test "validation: sample invalid frontmatter fails" {
-    run has_valid_frontmatter "$FIXTURES_DIR/invalid-frontmatter.md" "name" "description"
+    run has_valid_frontmatter "$FIXTURES_DIR/invalid-frontmatter.md" "description"
 
     [ "$status" -ne 0 ]
 }

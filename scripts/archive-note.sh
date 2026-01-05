@@ -1,14 +1,20 @@
 #!/bin/bash
+set -euo pipefail
 # Archive session notes to session-archive
 
+# Load common library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
-CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
+# shellcheck source=scripts/lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
+
+# Initialize paths
+init_paths
+
 MEMO_FILE="$CLAUDE_DIR/as-you/session-notes.local.md"
 ARCHIVE_DIR="$CLAUDE_DIR/as-you/session-archive"
 
-# Create archive directory if not exists
-mkdir -p "$ARCHIVE_DIR"
+# Ensure archive directory exists
+ensure_dir "$ARCHIVE_DIR"
 
 # Check if memo file exists and is not empty
 if [ ! -f "$MEMO_FILE" ] || [ ! -s "$MEMO_FILE" ]; then
@@ -32,4 +38,4 @@ else
 	cp "$MEMO_FILE" "$ARCHIVE_FILE"
 fi
 
-echo "Memo archived to $DATE.md"
+log_info "Memo archived to $DATE.md"

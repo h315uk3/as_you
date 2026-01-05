@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Post-edit formatting hook example
 # Triggered after Edit tool use
 

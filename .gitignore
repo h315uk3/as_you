@@ -18,6 +18,9 @@ dist/
 build/
 *.log
 
+# Test coverage reports
+coverage/
+
 # OS-specific files
 .DS_Store
 Thumbs.db

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Calculate PMI (Pointwise Mutual Information) scores for word co-occurrences
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

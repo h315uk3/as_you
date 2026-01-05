@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Detect similar patterns using Levenshtein distance
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -7,6 +8,7 @@ CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
 TRACKER_FILE="$CLAUDE_DIR/as-you/pattern-tracker.json"
 
 # Load levenshtein function
+# shellcheck source=scripts/levenshtein.sh
 source "$SCRIPT_DIR/levenshtein.sh"
 
 # Check if tracker file exists

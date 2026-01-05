@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Track word frequency and update pattern-tracker.json
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

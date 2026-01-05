@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Calculate composite scores combining TF-IDF, time decay, and session spread
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -97,13 +98,13 @@ jq '.promotion_candidates = ([
 		is_stopword: (.value.is_stopword // false),
 		reason: (
 			if (.value.is_stopword // false) then
-				"停止語（スコア減少）"
+				"Stopword (score reduced)"
 			elif ((.value.composite_score // 0) > 0.7) then
-				"高スコア: TF-IDF=\((.value.tfidf // 0) | tostring | .[0:5]), 最近使用"
+				"High score: TF-IDF=\((.value.tfidf // 0) | tostring | .[0:5]), recently used"
 			elif ((.value.composite_score // 0) > 0.5) then
-				"中スコア: 複数セッションで使用"
+				"Medium score: used across multiple sessions"
 			else
-				"低スコア: 検討候補"
+				"Low score: candidate for review"
 			end
 		)
 	}

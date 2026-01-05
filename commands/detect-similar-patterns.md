@@ -1,5 +1,6 @@
 ---
 description: Detect and display similar patterns for merging
+allowed-tools: [Bash]
 ---
 
 Execute similar pattern detection functionality.

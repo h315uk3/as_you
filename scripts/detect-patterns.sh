@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Detect patterns from archived memos using simple word frequency
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

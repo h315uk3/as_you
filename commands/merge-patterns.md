@@ -1,5 +1,6 @@
 ---
 description: Automatically merge and consolidate similar patterns
+allowed-tools: [Bash]
 ---
 
 Execute similar pattern merging.

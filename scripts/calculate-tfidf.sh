@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Calculate TF-IDF scores for patterns
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,7 +21,7 @@ if [ ! -d "$ARCHIVE_DIR" ]; then
 fi
 
 # Count total documents (sessions)
-TOTAL_DOCS=$(ls "$ARCHIVE_DIR"/*.md 2>/dev/null | wc -l)
+TOTAL_DOCS=$(find "$ARCHIVE_DIR" -name "*.md" -type f 2>/dev/null | wc -l)
 if [ "$TOTAL_DOCS" -eq 0 ]; then
 	echo "Error: no archive files found" >&2
 	exit 1

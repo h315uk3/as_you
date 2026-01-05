@@ -36,9 +36,31 @@ while true; do
 done
 """
 
+[tasks."test:coverage"]
+description = "Generate test coverage report with kcov (requires kcov installed)"
+run = """
+if ! command -v kcov &> /dev/null; then
+  echo "kcov not found. Install with:"
+  echo "  macOS: brew install kcov"
+  echo "  Ubuntu: sudo apt-get install kcov"
+  exit 1
+fi
+
+rm -rf coverage
+mkdir -p coverage
+
+# Run tests with coverage
+kcov --exclude-pattern=/usr/share,/tmp \
+  coverage \
+  bats tests/unit/*.bats tests/integration/*.bats tests/validation/*.bats
+
+echo ""
+echo "Coverage report generated: coverage/index.html"
+"""
+
 [tasks.lint]
 description = "Check shell scripts with shellcheck"
-run = "shellcheck scripts/*.sh hooks/*.sh"
+run = "shellcheck --exclude=SC1091 scripts/*.sh hooks/*.sh"
 
 [tasks.format]
 description = "Format shell scripts with shfmt"

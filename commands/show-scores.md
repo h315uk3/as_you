@@ -1,5 +1,6 @@
 ---
 description: Display pattern composite scores and rankings
+allowed-tools: [Bash]
 ---
 
 Display pattern scoring results.

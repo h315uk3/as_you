@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Mark a pattern as promoted to skill or agent
 
 # Ensure PATH includes mise shims and common bin directories
@@ -63,13 +64,11 @@ fi
 CURRENT_DATE=$(date +%Y-%m-%d)
 
 # Update pattern with promotion info
-jq ".patterns.\"$PATTERN\".promoted = true | \
+if jq ".patterns.\"$PATTERN\".promoted = true | \
     .patterns.\"$PATTERN\".promoted_to = \"$TYPE\" | \
     .patterns.\"$PATTERN\".promoted_at = \"$CURRENT_DATE\" | \
     .patterns.\"$PATTERN\".promoted_path = \"$PATH\" | \
-    .patterns.\"$PATTERN\".keep_tracking = true" "$TRACKER_FILE" >"$TRACKER_FILE.tmp"
-
-if [ $? -eq 0 ]; then
+    .patterns.\"$PATTERN\".keep_tracking = true" "$TRACKER_FILE" >"$TRACKER_FILE.tmp"; then
 	mv "$TRACKER_FILE.tmp" "$TRACKER_FILE"
 	echo "✓ Pattern '$PATTERN' marked as promoted to $TYPE at $PATH"
 else
