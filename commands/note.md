@@ -39,11 +39,11 @@ If $ARGUMENTS is provided, execute the following:
    - If in another language (e.g., Japanese, Spanish, French), translate to English
    - Maintain technical terms and proper nouns correctly
 
-2. Execute with Bash tool, substituting the translated English content into the echo command:
+2. Execute with Bash tool, constructing the echo command with the actual translated text:
    ```bash
    mkdir -p .claude/as_you
-   echo "[$(date +%H:%M)] translated-content-here" >> .claude/as_you/session_notes.local.md
+   echo "[$(date +%H:%M)] <insert translated text here>" >> .claude/as_you/session_notes.local.md
    ```
-   Note: Replace `translated-content-here` with the actual translated text from step 1 when constructing the command.
+   Important: You must replace `<insert translated text here>` with the actual translated content from step 1 when you construct this command. Do not execute this command with the placeholder text.
 
 3. Respond: "Note added (translated to English if needed)"
