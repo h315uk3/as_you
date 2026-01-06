@@ -1,6 +1,61 @@
-# Development Guide
+# Contributing Guide
 
-This guide explains how to develop and extend the As You plugin.
+Thank you for your interest in contributing to the As You plugin!
+
+## Philosophy
+
+### Why These Constraints Exist
+
+**Python-Centric Architecture:**
+- **Why**: Shell scripts are difficult to test, debug, and maintain at scale
+- **Purpose**: Enable comprehensive testing and rapid iteration
+- **Responsibility**: Contributors must write testable, type-safe Python code; reviewers must verify test coverage
+
+**Type Hints Required:**
+- **Why**: Prevent runtime errors and enable static analysis
+- **Purpose**: Catch bugs at development time, not production time
+- **Responsibility**: Contributors must annotate all functions; CI enforces this automatically
+
+**Doctests in All Functions:**
+- **Why**: Tests colocated with code stay synchronized and serve as living documentation
+- **Purpose**: Ensure every function works as documented and examples remain executable
+- **Responsibility**: Contributors write doctests for new code; reviewers verify they're meaningful, not trivial
+
+**Standard Library Only:**
+- **Why**: External dependencies create maintenance burden, version conflicts, and installation complexity
+- **Purpose**: Keep the plugin lightweight, portable, and dependency-free for all users
+- **Responsibility**: Contributors must solve problems with standard library; maintainers reject PRs with external deps
+
+**Shell Scripts Minimized:**
+- **Why**: Hooks require shell, but all logic should be testable Python
+- **Purpose**: Keep shell as thin glue code (environment setup + Python invocation only)
+- **Responsibility**: Contributors delegate logic to Python; reviewers reject shell scripts with business logic
+
+**Documentation Separation:**
+- **Why**: Implementation details change frequently; process/philosophy doesn't
+- **Purpose**: CONTRIBUTING.md stays stable; volatile details live in code/docstrings
+- **Responsibility**: Contributors update docstrings, not CONTRIBUTING; maintainers enforce separation
+
+### Roles and Responsibilities
+
+**Contributors:**
+- Write type-annotated, doctest-covered Python code
+- Ensure all tests pass locally before pushing
+- Update relevant documentation (docstrings, tests/README.md)
+- Respond to review feedback constructively
+
+**Reviewers:**
+- Verify tests are comprehensive and meaningful
+- Check type hints are present and correct
+- Ensure no external dependencies sneak in
+- Validate shell scripts are minimal with no business logic
+- Confirm documentation is in the right place
+
+**Maintainers:**
+- Enforce architectural principles
+- Keep CONTRIBUTING.md focused on philosophy/process
+- Reject changes that violate constraints (even if functionally correct)
+- Guide contributors toward pythonic, testable solutions
 
 ## Development Environment Setup
 
@@ -9,262 +64,198 @@ This guide explains how to develop and extend the As You plugin.
 - Git
 - [mise](https://mise.jdx.dev/) - Tool version management and task runner
 
-### Setup Steps
+### Setup
 
 ```bash
-# Clone the repository
+# Clone and setup
 git clone https://github.com/h315uk3/as_you.git
 cd as_you
 
 # Install mise (if not already installed)
 curl https://mise.run | sh
 
-# Install all dependencies
+# Install dependencies (see mise.toml for versions)
 mise install
+
+# Run tests
+mise run test
 ```
 
-`mise install` installs the following (defined in `mise.toml`):
-- **bats** (1.13.0) - Bash test framework
-- **jq** (1.8.1) - JSON processing
-- **shellcheck** (0.11.0) - Shell script linter
-- **shfmt** (3.12.0) - Shell script formatter
-- **rust** (1.92.0) - For MCP development (optional)
+## Development Workflow
 
-### Project Structure
-
-```
-as_you/
-├── .claude-plugin/plugin.json  # Plugin manifest
-├── commands/                    # Slash commands (20 total)
-├── agents/                      # Custom agents
-├── skills/                      # Agent Skills
-├── hooks/                       # Event hooks
-│   ├── hooks.json
-│   ├── session-start.sh
-│   ├── session-end.sh
-│   └── post-edit-format.sh
-├── scripts/                     # Pattern extraction & scoring scripts (16 total)
-├── tests/                       # bats test suite
-│   ├── unit/
-│   ├── integration/
-│   └── validation/
-├── LICENSE                      # MIT License
-└── mise.toml                    # Task and tool definitions
-```
-
-## Development Tasks
+### Testing
 
 ```bash
-# Testing
-mise run test              # Run all tests
-mise run test:unit         # Run unit tests
-mise run test:integration  # Run integration tests
-mise run test:validation   # Run validation tests
-mise run test:watch        # Watch mode
-
-# Code quality
-mise run lint              # Run shellcheck linter
-mise run format            # Format with shfmt
-mise run validate          # Validate plugin (includes JSON validation)
-
-# Scoring debug execution
-mise run scoring:tfidf     # Calculate TF-IDF
-mise run scoring:pmi       # Calculate PMI
-mise run scoring:decay     # Calculate time decay
-mise run scoring:composite # Calculate composite score batch
+mise run test           # Run all doctests
+mise run test:verbose   # Verbose output
+mise run test:watch     # Watch mode (auto-run on changes)
 ```
 
-## Extension Methods
-
-### Adding Slash Commands
-
-Create a Markdown file in the `commands/` directory. The filename (without extension) becomes the command name.
-
-**Filename**: `commands/my-command.md`
-
-```markdown
----
-description: Command description (one line)
----
-
-Instructions for the agent.
-Use $ARGUMENTS to reference user input.
-```
-
-### Adding Skills
-
-Create a `skills/my-skill/` directory and place `SKILL.md` inside.
-
-```markdown
----
-name: my-skill
-description: Clear description so agents can autonomously invoke it
----
-
-Detailed skill description.
-```
-
-Recommended directory structure:
-- `reference/` - Reference materials
-- `examples/` - Sample code
-
-### Adding Agents
-
-Create a Markdown file in the `agents/` directory. Define behavior in frontmatter.
-
-### Adding Hooks
-
-Edit `hooks/hooks.json`. Currently implemented hooks:
-- **SessionStart** → `session-start.sh`
-- **SessionEnd** → `session-end.sh` (runs pattern extraction)
-- **PostToolUse (Edit)** → `post-edit-format.sh`
-
-Available events:
-- `SessionStart` / `SessionEnd`
-- `PreToolUse` / `PostToolUse`
-- `SubagentStop`
-- `UserPromptSubmit`
-
-### Adding Scripts
-
-Create bash scripts in `scripts/`. Grant execution permission.
+### Code Quality
 
 ```bash
-chmod +x scripts/my-script.sh
+mise run lint           # Lint Python code (ruff)
+mise run format         # Format Python code (ruff)
+mise run validate       # Validate plugin configuration
 ```
 
-**Constraints**:
-- Dependencies: bash/awk/jq/bc only (no external libraries)
-- JSON processing must use jq
-- Error handling required
+### Available Tasks
 
-## Testing
-
-### Adding Tests
-
-Use bats-core framework.
-
-**Example**: `tests/unit/my-test.bats`
-
+See all available tasks:
 ```bash
-#!/usr/bin/env bats
-
-@test "test description" {
-  run bash scripts/my-script.sh
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"expected"* ]]
-}
+mise tasks
 ```
 
-### Existing Test Files
+## Contributing Guidelines
 
-- `tests/unit/scripts.bats` - Script unit tests
-- `tests/unit/hooks.bats` - Hook unit tests
-- `tests/integration/workflow.bats` - Integration tests
-- `tests/validation/frontmatter.bats` - Frontmatter validation
-- `tests/validation/json-schema.bats` - JSON validation
+### Code Standards
 
-## Development Guidelines
+**Python** (scripts/*.py):
+- Python 3.11+ with type hints
+  - **Why**: Modern Python features (match/case, improved type system) improve code quality
+  - **Responsibility**: Contributors verify Python version locally; CI rejects incompatible code
+- Must pass `ruff check` and `ruff format`
+  - **Why**: Consistent style reduces cognitive load and prevents style debates
+  - **Responsibility**: Contributors run `mise run lint` before pushing; CI blocks non-conforming code
+- Include comprehensive doctests for all functions
+  - **Why**: Executable examples prevent documentation drift and catch regressions
+  - **Responsibility**: Contributors write realistic examples; reviewers reject trivial tests (e.g., `>>> 1 + 1\n2`)
+- Standard library only (no external dependencies)
+  - **Why**: Eliminates dependency hell, version conflicts, and installation issues
+  - **Responsibility**: Contributors solve problems creatively with stdlib; maintainers provide guidance on stdlib alternatives
 
-### Prohibitions
+**Shell** (hooks/*.sh only):
+- Keep minimal - delegate logic to Python modules
+  - **Why**: Shell is untestable and error-prone; Python is testable and maintainable
+  - **Responsibility**: Contributors extract logic to Python; reviewers reject shell scripts with business logic
+- Call Python modules directly (`python3 scripts/module_name.py`)
+  - **Why**: Direct invocation is simpler than managing shell function libraries
+  - **Responsibility**: Contributors use absolute paths or proper PATH; reviewers verify portability
 
-1. **No Guessing** - Always refer to official documentation or actual code
-2. **No Unresolved Issues** - Identify root cause before fixing
-3. **No Legacy Code** - Follow latest best practices
-4. **No Unreviable Changes** - Keep changes at a human-verifiable granularity
+**Documentation**:
+- Update tests/README.md if adding new modules
+  - **Why**: Centralized module overview helps new contributors understand the codebase
+  - **Responsibility**: Contributors update module table when adding files; maintainers keep overview current
+- Keep CONTRIBUTING.md focused on process, not implementation details
+  - **Why**: Process/philosophy is stable; implementation details are volatile
+  - **Responsibility**: Contributors put implementation details in docstrings; maintainers reject volatile content
+- Avoid documenting volatile information (directory structures, internal flows)
+  - **Why**: Documentation maintenance cost > value for frequently changing details
+  - **Responsibility**: Contributors use code comments for volatile info; reviewers suggest moving details to docstrings
 
-### Coding Standards
+### Adding New Python Modules
 
-- Must pass shellcheck
-- Must be formatted with shfmt
-- JSON processing must use jq
-- Proper error handling required
+1. Create module in `scripts/` with permissions `644` (rw-r--r--):
+   ```python
+   """Module description."""
+
+   def my_function(arg: str) -> int:
+       """
+       Function description.
+
+       Examples:
+           >>> my_function("test")
+           4
+       """
+       return len(arg)
+
+   if __name__ == "__main__":
+       import doctest
+       doctest.testmod()
+   ```
+
+2. Run tests:
+   ```bash
+   python3 scripts/my_module.py --test  # Test single module
+   mise run test                        # Test all modules
+   ```
+
+3. Ensure it passes linting:
+   ```bash
+   mise run lint
+   ```
+
+### Pull Request Process
+
+**Why This Process Exists:**
+- Protects main branch quality
+- Enables parallel development
+- Provides clear audit trail
+- Facilitates code review
+
+**Your Responsibilities as Contributor:**
+
+1. **Fork and Branch**
+   ```bash
+   git checkout -b feature/descriptive-name
+   ```
+   - **Why**: Isolates your changes; prevents conflicts with other contributors
+   - **Responsibility**: Use descriptive branch names; keep branches focused on single features
+
+2. **Develop with Tests**
+   ```bash
+   mise run test           # Run after every change
+   mise run lint           # Fix style issues
+   ```
+   - **Why**: Catch bugs early; avoid CI failures that waste reviewer time
+   - **Responsibility**: Ensure 100% test pass rate locally before pushing
+
+3. **Commit Thoughtfully**
+   ```bash
+   git commit -m "Add BK-Tree similarity search (O(n log n))"
+   ```
+   - **Why**: Clear history helps debugging and understanding changes
+   - **Responsibility**: Write descriptive commits; reference issues when relevant; keep commits atomic
+
+4. **Push and Create PR**
+   ```bash
+   git push origin feature/descriptive-name
+   ```
+   - **Why**: Makes your work visible and reviewable
+   - **Responsibility**: Fill out PR template; explain what/why/how; link related issues
+
+5. **Respond to Reviews**
+   - **Why**: Reviewers invest time to improve your code
+   - **Responsibility**: Address feedback promptly; ask questions if unclear; update PR based on comments
+
+**Reviewer Responsibilities:**
+- Check code meets standards (type hints, doctests, no external deps)
+- Verify tests are meaningful and comprehensive
+- Suggest improvements for clarity/performance
+- Approve only when all criteria met
+- Be respectful and constructive
 
 ## CI/CD
 
-GitHub Actions (`.github/workflows/test.yml`) runs automatic tests on:
-- Push (main branch)
-- Pull requests (to main)
+GitHub Actions automatically runs on:
+- Push to `main` or `develop` branches
+- Pull requests to `main` or `develop`
 
-Execution flow:
+Checks performed:
 1. Install dependencies with mise
-2. Run `mise run lint`
-3. Run `mise run test`
-4. Run `mise run validate`
+2. Run linter (`mise run lint`)
+3. Run all doctests (`mise run test`)
+4. Validate configuration (`mise run validate`)
 
-## Architecture
+All checks must pass before merging.
 
-### Pattern Extraction Flow
+## Plugin Architecture
 
-```
-Session Notes (.claude/as_you/session_notes.local.md)
-  ↓ Automatically run on SessionEnd
-Archive (.claude/as_you/session_archive/YYYY-MM-DD.md)
-  ↓ Extract patterns and score
-Pattern Tracker (.claude/as_you/pattern_tracker.json)
-  ↓ Auto-detect promotion candidates
-Knowledge Base (skills/*/SKILL.md, agents/*.md)
-```
-
-Workflows are a separate system: saved as `commands/` for repeated work.
-
-### SessionEnd Processing
-
-`hooks/session-end.sh` executes the following in sequence:
-
-1. `archive-note.sh` - Archive session notes
-2. `track-frequency.sh` - Extract patterns and score
-   - `detect-patterns.sh` - Extract words
-   - `extract-contexts.sh` - Record surrounding context (1 line before/after)
-   - `detect-cooccurrence.sh` - Detect word co-occurrence patterns
-   - `calculate-tfidf.sh` - Calculate TF-IDF
-   - `calculate-pmi.sh` - Calculate PMI
-   - `calculate-time-decay.sh` - Calculate time decay
-   - `calculate-composite-score.sh` - Calculate composite score
-3. `merge-similar-patterns.sh` - Auto-merge similar patterns (Levenshtein distance ≤ 2)
-
-### Scoring Methods
-
-- **TF-IDF**: Word frequency × inverse document frequency
-- **PMI**: Mutual information of word co-occurrence (log(P(A,B) / (P(A) × P(B))))
-- **Time Decay**: Exponential decay (λ=0.1, 37% after 10 days)
-- **Composite Score**: TF-IDF 40% + Freshness 30% + Session Spread 30%
-- **Similarity**: Levenshtein distance (edit distance)
-
-**Implementation Features**:
-- No NLP libraries (bash/awk/jq/bc only)
-- Basic statistics and string processing
-- Simple, understandable logic
-
-For details: See plugin documentation
-
-## Plugin Distribution
-
-### GitHub Marketplace
-
-Repository already supports marketplace installation:
-
-```bash
-/plugin marketplace add h315uk3/as_you
-/plugin install as-you@h315uk3-as_you
-```
-
-### Official Marketplace Registration
-
-Submit PR to [claude-plugins-official](https://github.com/anthropics/claude-plugins-official).
-
-Review criteria:
-- Security
-- Code quality
-- Documentation completeness
-- User value
-
-## Related Resources
-
-- [Claude Code Plugins](https://code.claude.com/docs/en/plugins)
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [rmcp SDK (Rust)](https://docs.rs/rmcp/)
+For implementation details, see:
+- `tests/README.md` - Testing strategy and module overview
+- `.github/instructions.md` - General plugin development guide (not As You specific)
+- Individual module docstrings - Implementation documentation
 
 ## License
 
-MIT License - [LICENSE](LICENSE)
+MIT License - See [LICENSE](LICENSE) for details.
+
+## Questions?
+
+- Open an issue for bugs or feature requests
+- Check existing issues and discussions before creating new ones
+- Be respectful and constructive in all interactions
+
+---
+
+**Note**: Keep this document focused on contribution process, not implementation details. Implementation details belong in code comments, docstrings, and tests/README.md.

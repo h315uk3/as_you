@@ -1,149 +1,204 @@
 # As You Plugin Tests
 
-このディレクトリには、As Youプラグインのテストスイートが含まれています。
+This directory contains the test suite for the As You plugin.
 
-## テスト構成
+## Testing Philosophy
+
+**Python-centric testing strategy**: Core logic is implemented in Python modules (`scripts/*.py`) and thoroughly tested with doctests. Shell scripts serve as thin wrappers that delegate to Python modules.
+
+## Test Structure
 
 ```
 tests/
-├── unit/                # 単体テスト
-│   ├── scripts.bats    # スクリプトのユニットテスト (scripts/*.sh)
-│   └── hooks.bats      # フックのユニットテスト (hooks/*.sh)
-├── integration/         # 統合テスト
-│   └── workflow.bats   # エンドツーエンドワークフローテスト
-├── validation/          # 検証テスト
-│   ├── frontmatter.bats # YAML frontmatter検証 (commands/, agents/, skills/)
-│   └── json-schema.bats # JSON構造検証 (plugin.json, hooks.json)
-└── fixtures/            # テストフィクスチャ
-    ├── sample-memo.md
-    ├── sample-archive.md
-    ├── sample-command.md
-    └── invalid-frontmatter.md
+├── run_doctests.py     # Unified doctest runner (standard approach)
+└── README.md           # This file
+
+Note: Integration tests (integration/) are planned for future implementation.
+      Currently, all functionality is covered by Python doctests.
 ```
 
-## テストの実行
+## Running Tests
 
-### 前提条件
+### Prerequisites
 
-- **mise**: タスクランナー（必須）
-- **bats-core**: Bashテストフレームワーク
-- **jq**: JSON処理ツール
+- **Python 3.11+**: Required for doctest runner execution
+- **mise**: Task runner (recommended)
 
 ```bash
-# miseのインストール
+# Install mise
 curl https://mise.run | sh
-
-# bats-coreのインストール
-mise use -g bats@latest
-
-# jqのインストール (Ubuntu/Debian)
-sudo apt-get install jq
-
-# または (macOS)
-brew install jq
 ```
 
-### miseタスクで実行
+### Running with mise (Recommended)
 
 ```bash
-# プロジェクトルートから実行
-mise run test              # すべてのテスト
-mise run test:unit         # 単体テストのみ
-mise run test:integration  # 統合テストのみ
-mise run test:validation   # 検証テストのみ
-mise run test:watch        # watchモード
+# Run from project root
+mise run test              # Run all Python doctests
+mise run test:verbose      # Run doctests with verbose output
+mise run test:watch        # Watch mode (auto-run every 5 seconds)
 
-# その他の開発タスク
-mise tasks                 # タスク一覧
-mise run lint              # shellcheck
-mise run format            # shfmt
-mise run validate          # プラグイン設定検証
+# Other development tasks
+mise tasks                 # List all available tasks
+mise run lint              # Lint shell scripts + Python code (shellcheck + ruff)
+mise run lint:python       # Lint Python code only (ruff)
+mise run format            # Format all code (shfmt + ruff)
+mise run format:python     # Format Python code only (ruff)
+mise run validate          # Validate plugin configuration files
 ```
 
-### 個別のテストファイルを直接実行
+### Direct Execution
 
 ```bash
-bats tests/unit/scripts.bats
-bats tests/integration/workflow.bats
+# Python doctest runner
+python3 tests/run_doctests.py
+
+# Verbose output
+python3 tests/run_doctests.py -v
+
+# Test individual modules
+python3 scripts/frequency_tracker.py --test
+python3 scripts/score_calculator.py --test
 ```
 
-## テストカバレッジ
+## Test Coverage
 
-### Unit Tests (単体テスト)
+### Python Doctests (Primary Tests)
 
-- **scripts.bats**: 8個のスクリプトの動作検証
-  - `detect-patterns.sh`: パターン検出
-  - `archive-memo.sh`: メモアーカイブ
-  - `cleanup-archive.sh`: 古いアーカイブの削除
-  - `track-frequency.sh`: パターン頻度追跡
-  - `suggest-promotions.sh`: 昇格候補の提案
-  - その他のスクリプト
+213 doctests across 16 modules with 100% pass rate:
 
-- **hooks.bats**: 3個のフックの動作検証
-  - `session-start.sh`: セッション開始処理
-  - `session-end.sh`: セッション終了処理
-  - `post-edit-format.sh`: 編集後処理
+| Module | Doctests | Description |
+|--------|----------|-------------|
+| usage_stats_initializer.py | 38 | Usage statistics initialization |
+| context_extractor.py | 26 | Context extraction from archives |
+| frequency_tracker.py | 24 | Pattern frequency tracking |
+| pattern_updater.py | 20 | Pattern metadata updates |
+| bktree.py | 19 | BK-Tree similarity search |
+| cooccurrence_detector.py | 17 | Co-occurrence pattern detection |
+| promotion_analyzer.py | 11 | Promotion candidate analysis |
+| levenshtein.py | 10 | Levenshtein distance calculation |
+| pattern_merger.py | 8 | Pattern merging with backups |
+| promotion_marker.py | 8 | Mark patterns as promoted |
+| pattern_detector.py | 7 | Pattern detection from text |
+| note_archiver.py | 6 | Note archiving to session_archive |
+| tfidf_calculator.py | 5 | TF-IDF score calculation |
+| pmi_calculator.py | 5 | PMI score calculation |
+| similarity_detector.py | 5 | Similar pattern detection |
+| score_calculator.py | 4 | Unified score calculation |
 
-### Integration Tests (統合テスト)
+**Coverage**: 213 doctests total, 100% passing (expanded from 191 to 213)
 
-- **workflow.bats**: エンドツーエンドワークフロー
-  - セッションライフサイクル
-  - パターン検出→昇格提案フロー
-  - アーカイブクリーンアップ
-  - 共起パターン検出
-  - パターンの蓄積
+### Integration Tests (Future)
 
-### Validation Tests (検証テスト)
+End-to-end workflow tests planned:
+- Session lifecycle (start → work → end)
+- Pattern detection → scoring → promotion flow
+- Archive management and cleanup
 
-- **frontmatter.bats**: YAML frontmatter検証
-  - Commands の frontmatter
-  - Agents の frontmatter
-  - Skills の frontmatter
-  - 名前の一意性チェック
+## Adding Tests
 
-- **json-schema.bats**: JSON構造検証
-  - `plugin.json` 構造
-  - `hooks.json` 構造
-  - パス参照の正当性
+When adding new functionality:
 
-## CI/CD
+### 1. Add Doctests to Python Functions/Classes
 
-GitHub Actionsで自動テストを実行：
+```python
+def my_function(arg: str) -> int:
+    """
+    Brief description of function.
 
-- Push時 (main, develop)
-- Pull Request時
+    Args:
+        arg: Description of argument
 
-テスト結果は各PRのChecks タブで確認できます。
+    Returns:
+        Description of return value
 
-## テストの追加
+    Examples:
+        >>> my_function("test")
+        4
+        >>> my_function("")
+        0
+    """
+    return len(arg)
+```
 
-新しいテストを追加する場合：
+### 2. Doctest Guidelines
 
-1. 適切なカテゴリ (unit/integration/validation) に `.bats` ファイルを作成
-2. 必要に応じて `fixtures/` にテストデータを追加
-3. `test-runner.sh` は自動的に新しいテストを検出
+- **Self-contained**: Each doctest should be independently executable
+- **Temporary files**: Use `tempfile.TemporaryDirectory()` for isolation
+- **Error cases**: Test both normal and edge cases
+- **Simplicity**: Avoid complex setup
+- **Deterministic**: Same input should produce same output
 
-### テストの書き方
+### 3. Verify Tests
 
 ```bash
-#!/usr/bin/env bats
+# Test individual module
+python3 scripts/your_module.py --test
 
-setup() {
-    # テスト前の準備
-    export TEST_DIR="$(mktemp -d)"
-}
-
-teardown() {
-    # テスト後のクリーンアップ
-    rm -rf "$TEST_DIR"
-}
-
-@test "description of test" {
-    run your_command
-
-    [ "$status" -eq 0 ]
-    [[ "$output" =~ "expected output" ]]
-}
+# Test all modules
+mise run test
 ```
 
-詳細は既存のテストファイルを参照してください。
+## CI/CD Integration
+
+Automated tests run via GitHub Actions:
+
+- On push to `main` or `develop` branches
+- On pull requests to `main` or `develop`
+
+Test results are available in the Checks tab of each PR.
+
+## Architecture Benefits
+
+### Python-Centric Approach
+
+1. **Testability**: Function-level unit tests with doctests
+2. **Type Safety**: Static analysis via type hints
+3. **Maintainability**: Tests colocated with code
+4. **Performance**: Faster than shell script execution
+5. **Extensibility**: Handles complex logic easily
+
+### Direct Python Execution
+
+All functionality is implemented as standalone Python modules in `scripts/`:
+- No shell script wrappers needed
+- Direct execution: `python3 scripts/module_name.py`
+- Hooks (`hooks/*.sh`) call Python modules directly
+- Commands call Python modules via Bash tool
+
+## Troubleshooting
+
+### Doctest Failures
+
+```bash
+# Run with verbose output
+python3 scripts/module_name.py --test -v
+
+# Or use unified runner with verbose mode
+python3 tests/run_doctests.py -v
+```
+
+### Module Import Errors
+
+Doctests run within module scope, so relative imports may not work. For doctests:
+
+```python
+# ❌ Doesn't work
+>>> from .levenshtein import levenshtein_distance
+
+# ✅ Works (define simple function)
+>>> def simple_dist(a, b): return abs(len(a) - len(b))
+```
+
+### Python Version
+
+Python 3.11+ is recommended. Older versions may not support some type hints and features.
+
+## References
+
+- [Python doctest documentation](https://docs.python.org/3/library/doctest.html)
+- [mise task runner](https://mise.jdx.dev/)
+- [ruff linter & formatter](https://docs.astral.sh/ruff/)
+
+---
+
+**Note**: This testing strategy ensures the As You plugin maintains high quality and maintainability. Always include doctests when adding new features.

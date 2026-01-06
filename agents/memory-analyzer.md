@@ -16,10 +16,10 @@ Analyze pattern_tracker.json and suggest promotion of frequent patterns to knowl
 
 ## Execution Steps
 
-1. Execute `./scripts/suggest-promotions.sh` using Bash tool to retrieve promotion candidates
+1. Execute `python3 ./scripts/promotion_analyzer.py` using Bash tool to retrieve promotion candidates
 2. If 0 candidates:
    - Report: "No knowledge base promotion candidates currently available"
-   - Display current pattern count (`jq '.patterns | length' .claude/as_you/pattern_tracker.json`)
+   - Display current pattern count: `python3 -c "import json; print(len(json.load(open('.claude/as_you/pattern_tracker.json'))['patterns']))"`
 3. If candidates exist:
    - Analyze details of each candidate
    - Report with priorities

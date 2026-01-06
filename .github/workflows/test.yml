@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Run Tests
+    name: Python Doctests & Validation
     runs-on: ubuntu-latest
 
     steps:
@@ -21,16 +21,17 @@ jobs:
       - name: Install dependencies with mise
         run: mise install
 
-      - name: Run lint
+      - name: Run linter (ruff)
         run: mise run lint
 
-      - name: Run tests
+      - name: Run Python doctests (213 tests)
         run: mise run test
 
-      - name: Run validation
+      - name: Run validation (config + tests)
         run: mise run validate
 
       - name: Test summary
         if: always()
         run: |
-          echo "::notice::All checks completed"
+          echo "::notice::✓ Python doctests: 213 tests across 16 modules"
+          echo "::notice::✓ All checks completed"

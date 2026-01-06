@@ -32,26 +32,45 @@ if [ ! -f .claude/as_you/pattern_tracker.json ]; then
   exit 1
 fi
 
-CANDIDATE_COUNT=$(jq '.promotion_candidates | length' .claude/as_you/pattern_tracker.json 2>/dev/null || echo "0")
+python3 <<'EOF'
+import json
+import sys
 
-if [ "$CANDIDATE_COUNT" -eq 0 ]; then
-  echo "📊 No promotion candidates currently"
-  echo "   Continue sessions until patterns are detected"
-  exit 0
-fi
+try:
+    with open('.claude/as_you/pattern_tracker.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
 
-echo "📊 Top Promotion Candidates (Top ${CANDIDATE_COUNT})"
-echo ""
+    candidates = data.get('promotion_candidates', [])
 
-jq -r '.promotion_candidates[] |
-  "[\(.composite_score | tonumber | . * 100 | floor)%] \(.pattern)
-  Occurrences: \(.count) times, Sessions: \(.sessions)
-  TF-IDF: \(.tfidf | tonumber | . * 10 | floor / 10)
-  Reason: \(.reason)
-"' .claude/as_you/pattern_tracker.json | head -20
+    if len(candidates) == 0:
+        print("📊 No promotion candidates currently")
+        print("   Continue sessions until patterns are detected")
+        sys.exit(0)
 
-echo ""
-echo "💡 Promotion commands:"
-echo "   /as-you:promote-to-skill  - Promote as Skill"
-echo "   /as-you:promote-to-agent  - Promote as Agent"
+    print(f"📊 Top Promotion Candidates (Top {len(candidates)})")
+    print("")
+
+    # Show top 20 candidates
+    for candidate in candidates[:20]:
+        score_pct = int(candidate.get('composite_score', 0) * 100)
+        pattern = candidate.get('pattern', '')
+        count = candidate.get('count', 0)
+        sessions = candidate.get('sessions', 0)
+        tfidf = round(candidate.get('tfidf', 0), 1)
+        reason = candidate.get('reason', '')
+
+        print(f"[{score_pct}%] {pattern}")
+        print(f"  Occurrences: {count} times, Sessions: {sessions}")
+        print(f"  TF-IDF: {tfidf}")
+        print(f"  Reason: {reason}")
+        print("")
+
+    print("💡 Promotion commands:")
+    print("   /as-you:promote-to-skill  - Promote as Skill")
+    print("   /as-you:promote-to-agent  - Promote as Agent")
+
+except (json.JSONDecodeError, IOError) as e:
+    print(f"❌ Error reading pattern_tracker.json: {e}", file=sys.stderr)
+    sys.exit(1)
+EOF
 ```
