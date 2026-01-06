@@ -11,6 +11,7 @@
 
 # Development documentation (internal use only)
 doc/
+docs/
 
 # Node modules and build artifacts
 node_modules/
@@ -21,10 +22,34 @@ build/
 # Test coverage reports
 coverage/
 
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+*.cover
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.venv/
+venv/
+ENV/
+env/
+.Python
+
+# Rust
+target/
+Cargo.lock
+*.rs.bk
+*.pdb
 
 # OS-specific files
 .DS_Store

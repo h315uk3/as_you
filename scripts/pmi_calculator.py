@@ -8,11 +8,10 @@ import json
 import math
 import sys
 from pathlib import Path
-from typing import Dict
 
 # Import pattern extraction from pattern_detector
-import sys
 import os
+
 sys.path.insert(0, os.path.dirname(__file__))
 from pattern_detector import extract_patterns
 
@@ -26,12 +25,30 @@ def count_total_patterns(archive_dir: Path) -> int:
 
     Returns:
         Total number of patterns found
+
+    Examples:
+        >>> from pathlib import Path
+        >>> import tempfile
+        >>> import os
+        >>> with tempfile.TemporaryDirectory() as tmpdir:
+        ...     archive_dir = Path(tmpdir)
+        ...     # Create sample archive file
+        ...     test_file = archive_dir / "2025-01-01.md"
+        ...     _ = test_file.write_text("test deployment authentication system", encoding="utf-8")
+        ...     count = count_total_patterns(archive_dir)
+        ...     count >= 4  # At least 4 patterns
+        True
+
+        >>> with tempfile.TemporaryDirectory() as tmpdir:
+        ...     empty_dir = Path(tmpdir)
+        ...     count_total_patterns(empty_dir)
+        0
     """
     total = 0
 
-    for md_file in archive_dir.glob('*.md'):
+    for md_file in archive_dir.glob("*.md"):
         try:
-            text = md_file.read_text(encoding='utf-8')
+            text = md_file.read_text(encoding="utf-8")
             patterns = extract_patterns(text)
             total += len(patterns)
         except Exception as e:
@@ -56,7 +73,7 @@ def calculate_pmi(tracker_file: Path, archive_dir: Path) -> None:
     """
     # Load tracker data
     try:
-        with tracker_file.open('r', encoding='utf-8') as f:
+        with tracker_file.open("r", encoding="utf-8") as f:
             tracker_data = json.load(f)
     except Exception as e:
         print(f"Error: Failed to read tracker file: {e}", file=sys.stderr)
@@ -69,8 +86,8 @@ def calculate_pmi(tracker_file: Path, archive_dir: Path) -> None:
         sys.exit(1)
 
     # Get patterns and co-occurrences
-    patterns = tracker_data.get('patterns', {})
-    cooccurrences = tracker_data.get('cooccurrences', [])
+    patterns = tracker_data.get("patterns", {})
+    cooccurrences = tracker_data.get("cooccurrences", [])
 
     if not cooccurrences:
         print("Warning: no co-occurrences found in tracker", file=sys.stderr)
@@ -78,20 +95,20 @@ def calculate_pmi(tracker_file: Path, archive_dir: Path) -> None:
 
     # Calculate PMI for each co-occurrence
     for cooccur in cooccurrences:
-        words = cooccur.get('words', [])
+        words = cooccur.get("words", [])
         if len(words) != 2:
             continue
 
         word1, word2 = words
-        cooccur_count = cooccur.get('count', 0)
+        cooccur_count = cooccur.get("count", 0)
 
         # Get individual word counts
-        word1_count = patterns.get(word1, {}).get('count', 0)
-        word2_count = patterns.get(word2, {}).get('count', 0)
+        word1_count = patterns.get(word1, {}).get("count", 0)
+        word2_count = patterns.get(word2, {}).get("count", 0)
 
         # Skip if any count is 0
         if word1_count == 0 or word2_count == 0 or cooccur_count == 0:
-            cooccur['pmi'] = 0.0
+            cooccur["pmi"] = 0.0
             continue
 
         # Calculate probabilities
@@ -103,13 +120,13 @@ def calculate_pmi(tracker_file: Path, archive_dir: Path) -> None:
         # Avoid log(0) by checking probabilities
         if p_ab > 0 and p_a > 0 and p_b > 0:
             pmi = math.log(p_ab / (p_a * p_b))
-            cooccur['pmi'] = round(pmi, 6)
+            cooccur["pmi"] = round(pmi, 6)
         else:
-            cooccur['pmi'] = 0.0
+            cooccur["pmi"] = 0.0
 
     # Write back to tracker file
     try:
-        with tracker_file.open('w', encoding='utf-8') as f:
+        with tracker_file.open("w", encoding="utf-8") as f:
             json.dump(tracker_data, f, ensure_ascii=False, indent=2)
         print("PMI scores calculated for all co-occurrences")
     except Exception as e:
@@ -122,10 +139,10 @@ def main():
     import os
 
     # Get paths from environment or defaults
-    project_root = os.getenv('PROJECT_ROOT', os.getcwd())
-    claude_dir = os.getenv('CLAUDE_DIR', os.path.join(project_root, '.claude'))
-    tracker_file = Path(claude_dir) / 'as_you' / 'pattern_tracker.json'
-    archive_dir = Path(claude_dir) / 'as_you' / 'session_archive'
+    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
+    claude_dir = os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude"))
+    tracker_file = Path(claude_dir) / "as_you" / "pattern_tracker.json"
+    archive_dir = Path(claude_dir) / "as_you" / "session_archive"
 
     # Validate paths
     if not tracker_file.exists():
@@ -140,5 +157,18 @@ def main():
     calculate_pmi(tracker_file, archive_dir)
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    import doctest
+    import sys
+
+    # Check if running doctests
+    if "--test" in sys.argv or "-v" in sys.argv:
+        print("Running PMI calculator doctests:")
+        results = doctest.testmod(verbose=("--verbose" in sys.argv or "-v" in sys.argv))
+        if results.failed == 0:
+            print(f"\n✓ All {results.attempted} doctests passed")
+        else:
+            print(f"\n✗ {results.failed}/{results.attempted} doctests failed")
+            sys.exit(1)
+    else:
+        main()

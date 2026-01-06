@@ -15,45 +15,77 @@ Check if statistics file exists, initialize if not:
 
 ```bash
 if [ ! -f .claude/skill-usage-stats.json ]; then
-    ./scripts/init-usage-stats.sh
+    python3 scripts/usage_stats_initializer.py
 fi
 ```
 
-### 2. Check Current Status
+### 2. Check Current Status and Detect Unused Knowledge Base
 
 ```bash
-# Number of Skills
-jq '.skills | length' .claude/skill-usage-stats.json
+python3 <<'EOF'
+import json
+from datetime import datetime, timedelta
 
-# Number of Agents
-jq '.agents | length' .claude/skill-usage-stats.json
+try:
+    with open('.claude/skill-usage-stats.json', 'r') as f:
+        data = json.load(f)
 
-# Last updated
-jq -r '.last_updated' .claude/skill-usage-stats.json
-```
+    skills = data.get('skills', {})
+    agents = data.get('agents', {})
+    last_updated = data.get('last_updated', 'N/A')
 
-### 3. Detect Unused Knowledge Base
+    print(f"Skill count: {len(skills)}")
+    print(f"Agent count: {len(agents)}")
+    print(f"Last updated: {last_updated}")
+    print("")
 
-#### Skills Unused for 30 Days
+    # Detect unused knowledge base (30 days threshold)
+    threshold = datetime.now() - timedelta(days=30)
 
-```bash
-jq -r '.skills | to_entries | .[] |
-    select(
-        (.value.last_used == null or
-         (.value.last_used | fromdateiso8601) < (now - 2592000))  # 30 days
-    ) |
-    .key' .claude/skill-usage-stats.json
-```
+    unused_skills = []
+    for name, info in skills.items():
+        last_used = info.get('last_used')
+        if last_used is None:
+            unused_skills.append(name)
+        else:
+            try:
+                last_used_dt = datetime.fromisoformat(last_used)
+                if last_used_dt < threshold:
+                    unused_skills.append(name)
+            except ValueError:
+                unused_skills.append(name)
 
-#### Agents Unused for 30 Days
+    unused_agents = []
+    for name, info in agents.items():
+        last_used = info.get('last_used')
+        if last_used is None:
+            unused_agents.append(name)
+        else:
+            try:
+                last_used_dt = datetime.fromisoformat(last_used)
+                if last_used_dt < threshold:
+                    unused_agents.append(name)
+            except ValueError:
+                unused_agents.append(name)
 
-```bash
-jq -r '.agents | to_entries | .[] |
-    select(
-        (.value.last_used == null or
-         (.value.last_used | fromdateiso8601) < (now - 2592000))
-    ) |
-    .key' .claude/skill-usage-stats.json
+    if unused_skills:
+        print("Unused skills (30+ days):")
+        for skill in unused_skills:
+            print(f"  - {skill}")
+        print("")
+
+    if unused_agents:
+        print("Unused agents (30+ days):")
+        for agent in unused_agents:
+            print(f"  - {agent}")
+        print("")
+
+    if not unused_skills and not unused_agents:
+        print("✓ All knowledge base items are actively used")
+
+except (json.JSONDecodeError, IOError) as e:
+    print(f"❌ Error reading stats: {e}")
+EOF
 ```
 
 ### 4. Create Review Report

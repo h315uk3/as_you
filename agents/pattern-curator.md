@@ -94,7 +94,7 @@ Maintain high-quality pattern data by:
 
 2. **Remove Noise**
    Patterns to remove: {list}
-   Run: `bash scripts/cleanup-patterns.sh`
+   (Manual cleanup required - use pattern_updater.py API or direct JSON edit)
 
 3. **Archive Stale Patterns**
    {count} patterns haven't been seen in 30+ days
@@ -141,7 +141,7 @@ Validate:
 Available for cleanup:
 - `/as-you:merge-patterns` - Merge similar patterns
 - `/as-you:detect-similar-patterns` - Find duplicates
-- Manual script: `bash scripts/cleanup-archive.sh`
+- Archive cleanup runs automatically on SessionStart (7+ days old)
 
 ## Notes
 

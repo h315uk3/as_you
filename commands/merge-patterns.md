@@ -8,7 +8,7 @@ Execute similar pattern merging.
 Detects patterns with Levenshtein distance below threshold and automatically consolidates them. All scores (TF-IDF, PMI, time decay, composite) are recalculated after merging.
 
 Execution:
-1. Detect similar patterns with scripts/merge-similar-patterns.sh
+1. Detect similar patterns with pattern_merger.py
 2. Consolidate low-frequency patterns into high-frequency ones
 3. Merge counts, sessions, and contexts
 4. Automatically recalculate all scores
@@ -26,8 +26,8 @@ Notes:
 - Execute manually with caution
 
 ```bash
-if [ ! -f scripts/merge-similar-patterns.sh ]; then
-  echo "❌ merge-similar-patterns.sh not found"
+if [ ! -f scripts/pattern_merger.py ]; then
+  echo "❌ pattern_merger.py not found"
   exit 1
 fi
 
@@ -35,7 +35,7 @@ echo "🔄 Starting pattern merge..."
 echo ""
 
 # Execute merge
-MERGE_OUTPUT=$(bash scripts/merge-similar-patterns.sh 2>&1)
+MERGE_OUTPUT=$(python3 scripts/pattern_merger.py 2>&1)
 MERGE_STATUS=$?
 
 # Display results

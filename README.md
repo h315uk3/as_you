@@ -10,7 +10,7 @@ A Claude Code plugin that extracts and accumulates patterns from your session no
 - **Pattern Extraction & Accumulation** - Automatically extract frequently-appearing patterns from manual notes and make them reusable
 - **Statistical Scoring** - TF-IDF, PMI, and time-decay-based importance evaluation
 - **Automatic Pattern Merging** - Automatically merge similar patterns using Levenshtein distance
-- **Language-Agnostic** - Implemented using only bash/awk/jq/bc (no NLP libraries)
+- **Pure Python Implementation** - Testable, maintainable code using Python standard library (no NLP libraries)
 
 ## How It Works
 
@@ -82,19 +82,18 @@ claude --plugin-dir /path/to/as_you
 ### Requirements
 
 - **Claude Code CLI**: https://claude.com/claude-code
-- **jq**: JSON processing
-- **bc**: Mathematical calculations (logarithms and exponential functions)
-- **awk**: Text processing (usually pre-installed)
+- **Python 3.x**: Pattern detection, scoring, and JSON processing (standard library only)
 
 ```bash
-# Install dependencies (if needed)
+# Install Python if needed
 # Ubuntu/Debian
-sudo apt-get install jq bc
+sudo apt-get install python3
 
 # macOS
-brew install jq bc
+brew install python3
 
-# awk is usually pre-installed
+# Or use system Python (usually pre-installed)
+python3 --version
 ```
 
 Optional (for developers):
@@ -109,6 +108,38 @@ Optional (for developers):
 # Try As You commands
 /as-you:note "Test note"
 /as-you:note-show
+```
+
+## Configuration
+
+### Performance Settings
+
+Control pattern merge frequency (default: every 10 sessions):
+
+```bash
+# Run merge more frequently
+export AS_YOU_MERGE_INTERVAL=5
+
+# Run merge less frequently
+export AS_YOU_MERGE_INTERVAL=20
+
+# Run merge every session (slower)
+export AS_YOU_MERGE_INTERVAL=1
+```
+
+Control backup retention (default: keep last 5):
+
+```bash
+# Keep more backups
+export AS_YOU_BACKUP_KEEP=10
+
+# Keep fewer backups
+export AS_YOU_BACKUP_KEEP=3
+```
+
+Manual merge anytime:
+```bash
+/as-you:merge-patterns
 ```
 
 ## Usage

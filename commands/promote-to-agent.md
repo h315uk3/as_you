@@ -14,7 +14,7 @@ Analyze frequent task patterns and promote them to knowledge base (Agent).
 Retrieve promotion candidates using Bash tool:
 
 ```bash
-./scripts/suggest-promotions.sh | jq '[.[] | select(.type == "agent")]'
+python3 ./scripts/promotion_analyzer.py | python3 -c "import sys, json; print(json.dumps([s for s in json.load(sys.stdin) if s['type'] == 'agent'], indent=2))"
 ```
 
 If 0 candidates:
@@ -35,7 +35,7 @@ For selected pattern:
 
 1. Organize context information:
    ```bash
-   jq -r '.patterns["selected_pattern"].contexts[]' .claude/as_you/pattern_tracker.json
+   python3 -c "import json; data = json.load(open('.claude/as_you/pattern_tracker.json')); print('\n'.join(data['patterns']['selected_pattern'].get('contexts', [])))"
    ```
 
 2. Infer required tools from task pattern:
@@ -59,7 +59,7 @@ For selected pattern:
 6. Update pattern_tracker.json:
    ```bash
    # Mark promotion status (also record promoted_to, promoted_at, promoted_path)
-   ./scripts/mark-promoted.sh "selected_pattern" agent "agents/{agent-name}.md"
+   python3 scripts/promotion_marker.py "selected_pattern" agent "agents/{agent-name}.md"
    ```
 
 ### 4. Completion Report

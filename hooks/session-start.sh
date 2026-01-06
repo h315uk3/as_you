@@ -9,35 +9,30 @@ CLAUDE_DIR="${CLAUDE_DIR:-$PROJECT_ROOT/.claude}"
 MEMO_FILE="$CLAUDE_DIR/as_you/session_notes.local.md"
 TRACKER_FILE="$CLAUDE_DIR/as_you/pattern_tracker.json"
 
-# Clean up old archives
-"${REPO_ROOT}/scripts/cleanup-archive.sh" 2>/dev/null || true
+# Clean up old archives (older than 7 days)
+ARCHIVE_DIR="$CLAUDE_DIR/as_you/session_archive"
+if [ -d "$ARCHIVE_DIR" ]; then
+	find "$ARCHIVE_DIR" -name "*.md" -type f -mtime +7 -delete 2>/dev/null || true
+fi
 
 # Clear session notes for new session
 rm -f "$MEMO_FILE"
 
-# Check for promotion candidates
+# Check for promotion candidates (using Python for better testability)
 if [ -f "$TRACKER_FILE" ]; then
-	CANDIDATES=$(jq -r '.promotion_candidates | length' "$TRACKER_FILE" 2>/dev/null)
-	if [ "$CANDIDATES" -gt 0 ]; then
+	# Get summary from Python script (single call, space-separated output)
+	read -r TOTAL SKILLS AGENTS TOP_PATTERN TOP_TYPE < <(
+		python3 "${REPO_ROOT}/scripts/promotion_analyzer.py" summary-line 2>/dev/null
+	)
+
+	if [ -n "$TOTAL" ] && [ "$TOTAL" -gt 0 ] 2>/dev/null; then
 		echo ""
-		echo "📊 Knowledge base promotion candidates detected ($CANDIDATES patterns)"
+		echo "📊 Knowledge base promotion candidates detected ($TOTAL patterns)"
 
-		# Show detailed suggestions
-		SUGGESTIONS=$("${REPO_ROOT}/scripts/suggest-promotions.sh" 2>/dev/null)
-		SKILL_COUNT=$(echo "$SUGGESTIONS" | jq '[.[] | select(.type == "skill")] | length' 2>/dev/null)
-		AGENT_COUNT=$(echo "$SUGGESTIONS" | jq '[.[] | select(.type == "agent")] | length' 2>/dev/null)
+		[ "${SKILLS:-0}" -gt 0 ] 2>/dev/null && echo "  - Skill candidates: $SKILLS"
+		[ "${AGENTS:-0}" -gt 0 ] 2>/dev/null && echo "  - Agent candidates: $AGENTS"
 
-		if [ "$SKILL_COUNT" -gt 0 ]; then
-			echo "  - Skill candidates: $SKILL_COUNT"
-		fi
-		if [ "$AGENT_COUNT" -gt 0 ]; then
-			echo "  - Agent candidates: $AGENT_COUNT"
-		fi
-
-		# Show top candidate
-		TOP_PATTERN=$(echo "$SUGGESTIONS" | jq -r '.[0].pattern' 2>/dev/null)
-		TOP_TYPE=$(echo "$SUGGESTIONS" | jq -r '.[0].type' 2>/dev/null)
-		if [ -n "$TOP_PATTERN" ] && [ "$TOP_PATTERN" != "null" ]; then
+		if [ -n "$TOP_PATTERN" ] && [ "$TOP_PATTERN" != "null" ] && [ "$TOP_PATTERN" != "None" ]; then
 			echo "  - Top priority: \"$TOP_PATTERN\" ($TOP_TYPE)"
 		fi
 
@@ -48,8 +43,4 @@ if [ -f "$TRACKER_FILE" ]; then
 fi
 
 echo "As You plugin loaded"
-echo "Available features:"
-echo "- Session notes: /as-you:note, /as-you:note-show, /as-you:note-history"
-echo "- Workflows: /as-you:save-workflow, /as-you:list-workflows"
-echo "- Analysis: /as-you:memory-analyze, /as-you:memory-stats"
-echo "- Help: /as-you:help"
+echo "Quick start: /as-you:help"
