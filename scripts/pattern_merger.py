@@ -9,16 +9,14 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
 
-# Import from same directory
-sys.path.insert(0, os.path.dirname(__file__))
+from common import AsYouConfig
 from similarity_detector import detect_similar_patterns
 from pattern_updater import merge_patterns as update_merge_patterns
 from score_calculator import UnifiedScoreCalculator
 
 
-def create_backup(tracker_file: Path, keep_count: int = 5) -> Path:
+def create_backup(tracker_file: Path, keep_count: int = 5) -> Path | None:
     """
     Create timestamped backup and cleanup old ones.
 
@@ -89,7 +87,7 @@ def create_backup(tracker_file: Path, keep_count: int = 5) -> Path:
 
 def merge_similar_patterns_batch(
     tracker_file: Path, threshold: int = 2, min_count: int = 1
-) -> Dict:
+) -> dict:
     """
     Detect and merge similar patterns in batch.
 
@@ -239,10 +237,9 @@ def main():
     """CLI entry point."""
     import os
 
-    # Get paths from environment or defaults
-    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    claude_dir = os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude"))
-    tracker_file = Path(claude_dir) / "as_you" / "pattern_tracker.json"
+    # Get paths from environment
+    config = AsYouConfig.from_environment()
+    tracker_file = config.tracker_file
 
     # Get threshold from environment
     threshold = int(os.getenv("SIMILARITY_THRESHOLD", "2"))

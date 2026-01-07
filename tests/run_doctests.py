@@ -82,6 +82,11 @@ def main():
     # Always use scripts/ directory (relative to project root)
     scripts_dir = Path("scripts")
 
+    # Add scripts directory to sys.path for module imports
+    scripts_path = scripts_dir.resolve()
+    if str(scripts_path) not in sys.path:
+        sys.path.insert(0, str(scripts_path))
+
     if not scripts_dir.exists():
         print(f"{RED}Error:{NC} Scripts directory not found: {scripts_dir}")
         sys.exit(1)

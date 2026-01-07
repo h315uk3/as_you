@@ -4,45 +4,13 @@ Extract contexts for frequent patterns from archived memos.
 Replaces extract-contexts.sh with testable Python implementation.
 """
 
-import json
-import os
 import sys
 from pathlib import Path
-from typing import Dict, List
+
+from common import AsYouConfig, load_tracker
 
 
-def load_tracker(tracker_file: Path) -> Dict:
-    """
-    Load tracker data.
-
-    Args:
-        tracker_file: Path to pattern_tracker.json
-
-    Returns:
-        Tracker data dictionary
-
-    Examples:
-        >>> from pathlib import Path
-        >>> import tempfile
-        >>> with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-        ...     _ = f.write('{"patterns": {"test": {"count": 5}}}')
-        ...     temp_path = Path(f.name)
-        >>> data = load_tracker(temp_path)
-        >>> 'patterns' in data
-        True
-        >>> temp_path.unlink()
-    """
-    if not tracker_file.exists():
-        return {}
-
-    try:
-        with open(tracker_file, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, IOError):
-        return {}
-
-
-def get_top_patterns(tracker: Dict, limit: int = 10) -> List[str]:
+def get_top_patterns(tracker: dict, limit: int = 10) -> list[str]:
     """
     Get top N patterns by count.
 
@@ -79,7 +47,7 @@ def get_top_patterns(tracker: Dict, limit: int = 10) -> List[str]:
 
 def extract_contexts_for_pattern(
     pattern: str, archive_dir: Path, max_contexts: int = 5
-) -> List[str]:
+) -> list[str]:
     """
     Extract context lines for a pattern from archived memos.
 
@@ -146,7 +114,7 @@ def extract_contexts_for_pattern(
 
 def extract_contexts(
     tracker_file: Path, archive_dir: Path, top_n: int = 10, max_contexts: int = 5
-) -> Dict:
+) -> dict:
     """
     Extract contexts for top N patterns.
 
@@ -197,16 +165,13 @@ def extract_contexts(
 
 def main():
     """CLI entry point."""
-    # Get paths from environment or defaults
-    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    claude_dir = Path(os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude")))
-    tracker_file = claude_dir / "as_you" / "pattern_tracker.json"
-    archive_dir = claude_dir / "as_you" / "session_archive"
+    config = AsYouConfig.from_environment()
 
     # Extract contexts
-    result = extract_contexts(tracker_file, archive_dir, top_n=10, max_contexts=5)
+    result = extract_contexts(config.tracker_file, config.archive_dir, top_n=10, max_contexts=5)
 
     # Output JSON
+    import json
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

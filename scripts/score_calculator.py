@@ -25,8 +25,8 @@ from pathlib import Path
 from typing import Dict
 
 # Import from existing modules
-sys.path.insert(0, os.path.dirname(__file__))
-from tfidf_calculator import is_stopword, count_documents_containing_pattern
+from common import AsYouConfig
+from tfidf_calculator import is_stopword, calculate_tfidf_single_pass
 from pmi_calculator import count_total_patterns
 
 
@@ -114,21 +114,12 @@ class UnifiedScoreCalculator:
         return self.data
 
     def _calculate_tfidf_scores(self) -> None:
-        """Calculate TF-IDF scores for all patterns."""
-        for word, meta in self.patterns.items():
-            # Term Frequency
-            tf = meta.get("count", 0)
+        """Calculate TF-IDF scores using optimized single-pass algorithm."""
+        # Use optimized algorithm - scans all documents once for all patterns
+        tfidf_scores = calculate_tfidf_single_pass(self.patterns, self.archive_dir)
 
-            # Document Frequency
-            doc_freq = count_documents_containing_pattern(word, self.archive_dir)
-
-            # Inverse Document Frequency (add 1 to avoid division by zero)
-            idf = math.log(self.total_docs / (doc_freq + 1))
-
-            # TF-IDF score
-            tfidf = tf * idf
-
-            # Update pattern
+        # Update patterns with calculated scores
+        for word, (idf, tfidf) in tfidf_scores.items():
             self.patterns[word]["tfidf"] = round(tfidf, 6)
             self.patterns[word]["idf"] = round(idf, 6)
             self.patterns[word]["is_stopword"] = is_stopword(word)
@@ -261,18 +252,15 @@ class UnifiedScoreCalculator:
 
 def main():
     """CLI entry point."""
-    # Get paths
-    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    claude_dir = os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude"))
-    tracker_file = Path(claude_dir) / "as_you" / "pattern_tracker.json"
-    archive_dir = Path(claude_dir) / "as_you" / "session_archive"
+    # Get paths from environment
+    config = AsYouConfig.from_environment()
 
-    if not tracker_file.exists():
+    if not config.tracker_file.exists():
         print("Error: pattern_tracker.json not found", file=sys.stderr)
         sys.exit(1)
 
-    # Calculate all scores
-    calculator = UnifiedScoreCalculator(tracker_file, archive_dir)
+    # Calculate all scores using optimized algorithms
+    calculator = UnifiedScoreCalculator(config.tracker_file, config.archive_dir)
     calculator.calculate_all_scores()
     calculator.save()
 

@@ -218,7 +218,8 @@ def main():
 
     # Get paths from defaults
     project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    stats_file = Path(project_root) / ".claude" / "skill-usage-stats.json"
+    claude_dir = os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude"))
+    stats_file = Path(claude_dir) / "as_you" / "skill-usage-stats.json"
     skills_dir = Path(project_root) / "skills"
     agents_dir = Path(project_root) / "agents"
 

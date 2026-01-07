@@ -9,63 +9,38 @@ import json
 import sys
 from pathlib import Path
 from collections import Counter
-from typing import List, Dict
+
+from common import AsYouConfig
 
 
-def extract_patterns(text: str) -> List[str]:
+def extract_patterns(text: str) -> list[str]:
     """
-    Extract patterns from text using Unicode-aware tokenization.
+    Extract patterns from English text.
 
-    Approach:
-    1. Space-delimited tokens (Latin alphabet, etc.): extract as words (3+ chars)
-    2. Non-space scripts (Japanese, Chinese, Korean): extract as 3-grams
+    Note: All notes are translated to English before storage (see commands/note.md).
+    This function extracts English words (3+ characters).
 
     Examples:
         >>> extract_patterns("This is a test message")
         ['this', 'test', 'message']
         >>> extract_patterns("testing and debugging")
         ['testing', 'and', 'debugging']
-        >>> patterns = extract_patterns("日本語のテスト文章です")
-        >>> '日本語' in patterns
-        True
-        >>> len([p for p in patterns if 'テスト' in p]) > 0
-        True
         >>> extract_patterns("[12:34] timestamp removed")
         ['timestamp', 'removed']
         >>> extract_patterns("short ab c")
         ['short']
     """
-    patterns = []
-
     # Remove timestamps [HH:MM]
     text = re.sub(r"\[\d{2}:\d{2}\]", "", text)
 
-    # Extract space-delimited words (3+ chars, ASCII/Latin letters and numbers only)
-    # This captures English and similar languages but not CJK
+    # Extract space-delimited words (3+ chars, letters and numbers)
     words = re.findall(r"\b[a-zA-Z][a-zA-Z0-9]{2,}\b", text)
-    patterns.extend(word.lower() for word in words)
-
-    # Extract 3-grams from CJK scripts
-    # Remove all non-CJK characters to get continuous CJK text
-    cjk_chars = "".join(
-        re.findall(r"[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]", text)
-    )
-
-    # Extract all 3-character sequences from CJK text
-    # Han: Chinese characters (U+4E00-U+9FFF)
-    # Hiragana: Japanese (U+3040-U+309F)
-    # Katakana: Japanese (U+30A0-U+30FF)
-    # Hangul: Korean (U+AC00-U+D7AF)
-    for i in range(len(cjk_chars) - 2):
-        trigram = cjk_chars[i : i + 3]
-        patterns.append(trigram)
-
-    return patterns
+    return [word.lower() for word in words]
 
 
 def detect_patterns_from_archives(
     archive_dir: Path, top_n: int = 20
-) -> List[Dict[str, any]]:
+) -> list[dict[str, any]]:
     """
     Detect frequent patterns from all markdown files in archive directory.
 
@@ -105,12 +80,8 @@ def detect_patterns_from_archives(
 
 def main():
     """Main entry point for CLI usage."""
-    import os
-
-    # Get archive directory from environment or default
-    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    claude_dir = os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude"))
-    archive_dir = Path(claude_dir) / "as_you" / "session_archive"
+    config = AsYouConfig.from_environment()
+    archive_dir = config.archive_dir
 
     # Detect patterns
     patterns = detect_patterns_from_archives(archive_dir)
