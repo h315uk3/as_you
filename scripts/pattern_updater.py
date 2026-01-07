@@ -8,22 +8,11 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
+
+from common import load_tracker, save_tracker
 
 
-def load_tracker(tracker_file: Path) -> Dict:
-    """Load tracker data."""
-    with open(tracker_file, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def save_tracker(tracker_file: Path, data: Dict) -> None:
-    """Save tracker data."""
-    with open(tracker_file, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-
-def merge_patterns(tracker_file: Path, keep_pattern: str, merge_pattern: str) -> Dict:
+def merge_patterns(tracker_file: Path, keep_pattern: str, merge_pattern: str) -> dict:
     """
     Merge two similar patterns into one.
 
@@ -105,7 +94,7 @@ def merge_patterns(tracker_file: Path, keep_pattern: str, merge_pattern: str) ->
 
 def mark_promoted(
     tracker_file: Path, pattern: str, promotion_type: str, location: str
-) -> Dict:
+) -> dict:
     """
     Mark pattern as promoted to skill or agent.
 

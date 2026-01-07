@@ -82,7 +82,7 @@ claude --plugin-dir /path/to/as_you
 ### Requirements
 
 - **Claude Code CLI**: https://claude.com/claude-code
-- **Python 3.x**: Pattern detection, scoring, and JSON processing (standard library only)
+- **Python 3.11+**: Pattern detection, scoring, and JSON processing (standard library only)
 
 ```bash
 # Install Python if needed
@@ -150,9 +150,12 @@ Record your work. What you write becomes the raw data for pattern extraction.
 
 ```bash
 /as-you:note "Investigating authentication feature bug"
+/as-you:note "認証機能のバグ調査中"  # Automatically translated to English
 /as-you:note-show          # View current note
 /as-you:note-history       # View past 7 days
 ```
+
+**Note**: All notes are automatically translated to English before storage for consistent pattern extraction. You can write notes in any language (Japanese, Spanish, French, etc.), and they will be stored in English.
 
 #### Why Manual Input?
 

@@ -14,7 +14,7 @@ Review Skills/Agents status based on usage statistics and suggest maintenance.
 Check if statistics file exists, initialize if not:
 
 ```bash
-if [ ! -f .claude/skill-usage-stats.json ]; then
+if [ ! -f .claude/as_you/skill-usage-stats.json ]; then
     python3 scripts/usage_stats_initializer.py
 fi
 ```
@@ -27,7 +27,7 @@ import json
 from datetime import datetime, timedelta
 
 try:
-    with open('.claude/skill-usage-stats.json', 'r') as f:
+    with open('.claude/as_you/skill-usage-stats.json', 'r') as f:
         data = json.load(f)
 
     skills = data.get('skills', {})

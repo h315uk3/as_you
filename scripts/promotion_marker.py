@@ -6,14 +6,12 @@ Replaces mark-promoted.sh with testable implementation.
 """
 
 import argparse
-import os
 import sys
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Self
 
-# Import from same directory
-sys.path.insert(0, os.path.dirname(__file__))
+from common import AsYouConfig
 from pattern_updater import mark_promoted as mark_pattern_as_promoted
 from score_calculator import UnifiedScoreCalculator
 
@@ -25,7 +23,7 @@ class PromotionType(Enum):
     AGENT = "agent"
 
     @classmethod
-    def from_string(cls, value: str) -> Optional["PromotionType"]:
+    def from_string(cls, value: str) -> Self | None:
         """
         Create PromotionType from string.
 
@@ -45,7 +43,7 @@ class PromotionType(Enum):
 
 def mark_as_promoted(
     tracker_file: Path, pattern: str, promotion_type: PromotionType, location: str
-) -> Dict:
+) -> dict:
     """
     Mark pattern as promoted to prevent duplicate promotion.
 
@@ -157,9 +155,8 @@ Examples:
     args = parser.parse_args()
 
     # Get paths from environment
-    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    claude_dir = os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude"))
-    tracker_file = Path(claude_dir) / "as_you" / "pattern_tracker.json"
+    config = AsYouConfig.from_environment()
+    tracker_file = config.tracker_file
 
     # Parse promotion type
     promotion_type = PromotionType.from_string(args.type)

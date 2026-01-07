@@ -8,10 +8,11 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List
+
+from common import AsYouConfig
 
 
-def determine_type(contexts: List[str]) -> str:
+def determine_type(contexts: list[str]) -> str:
     """
     Determine if pattern should be promoted to agent or skill.
 
@@ -58,7 +59,7 @@ def determine_type(contexts: List[str]) -> str:
     return "skill"
 
 
-def extract_description(contexts: List[str], max_length: int = 100) -> str:
+def extract_description(contexts: list[str], max_length: int = 100) -> str:
     """
     Extract description from contexts (first 3, cleaned).
 
@@ -121,7 +122,7 @@ def to_kebab_case(text: str) -> str:
     return text.strip("-")
 
 
-def analyze_promotions(tracker_file: Path) -> List[Dict]:
+def analyze_promotions(tracker_file: Path) -> list[dict]:
     """
     Analyze promotion candidates and suggest type/name/description.
 
@@ -178,7 +179,7 @@ def analyze_promotions(tracker_file: Path) -> List[Dict]:
     return suggestions
 
 
-def get_promotion_summary(tracker_file: Path) -> Dict:
+def get_promotion_summary(tracker_file: Path) -> dict:
     """
     Get summary of promotion candidates.
 
@@ -225,12 +226,8 @@ def get_promotion_summary(tracker_file: Path) -> Dict:
 
 def main():
     """CLI entry point."""
-    import os
-
-    # Get paths from environment or defaults
-    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    claude_dir = os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude"))
-    tracker_file = Path(claude_dir) / "as_you" / "pattern_tracker.json"
+    config = AsYouConfig.from_environment()
+    tracker_file = config.tracker_file
 
     # Get mode from arguments
     mode = sys.argv[1] if len(sys.argv) > 1 else "full"

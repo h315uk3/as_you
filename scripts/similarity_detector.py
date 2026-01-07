@@ -7,16 +7,15 @@ Replaces O(n²) brute force with O(n log n) tree-based search.
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List
 
-# Import from same directory
+from common import AsYouConfig
 from levenshtein import levenshtein_distance
 from bktree import build_bktree_from_patterns
 
 
 def detect_similar_patterns(
     tracker_file: Path, threshold: int = 2, min_count: int = 1
-) -> List[Dict]:
+) -> list[dict]:
     """
     Detect similar patterns using BK-Tree for efficiency.
 
@@ -160,10 +159,9 @@ def main():
     """CLI entry point."""
     import os
 
-    # Get paths from environment or defaults
-    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    claude_dir = os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude"))
-    tracker_file = Path(claude_dir) / "as_you" / "pattern_tracker.json"
+    # Get paths from environment
+    config = AsYouConfig.from_environment()
+    tracker_file = config.tracker_file
 
     # Get threshold from environment or default
     threshold = int(os.getenv("SIMILARITY_THRESHOLD", "2"))

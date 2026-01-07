@@ -4,15 +4,11 @@ Calculate PMI (Pointwise Mutual Information) scores for word co-occurrences.
 Unicode-aware implementation using Python standard library.
 """
 
-import json
 import math
 import sys
 from pathlib import Path
 
-# Import pattern extraction from pattern_detector
-import os
-
-sys.path.insert(0, os.path.dirname(__file__))
+from common import AsYouConfig, load_tracker, save_tracker
 from pattern_detector import extract_patterns
 
 
@@ -71,13 +67,8 @@ def calculate_pmi(tracker_file: Path, archive_dir: Path) -> None:
         tracker_file: Path to pattern_tracker.json
         archive_dir: Path to session archive directory
     """
-    # Load tracker data
-    try:
-        with tracker_file.open("r", encoding="utf-8") as f:
-            tracker_data = json.load(f)
-    except Exception as e:
-        print(f"Error: Failed to read tracker file: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Load tracker data using common utility
+    tracker_data = load_tracker(tracker_file)
 
     # Count total patterns
     total_patterns = count_total_patterns(archive_dir)
@@ -124,25 +115,16 @@ def calculate_pmi(tracker_file: Path, archive_dir: Path) -> None:
         else:
             cooccur["pmi"] = 0.0
 
-    # Write back to tracker file
-    try:
-        with tracker_file.open("w", encoding="utf-8") as f:
-            json.dump(tracker_data, f, ensure_ascii=False, indent=2)
-        print("PMI scores calculated for all co-occurrences")
-    except Exception as e:
-        print(f"Error: Failed to write tracker file: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Save tracker data using common utility
+    save_tracker(tracker_file, tracker_data)
+    print("PMI scores calculated for all co-occurrences")
 
 
 def main():
     """Main entry point for CLI usage."""
-    import os
-
-    # Get paths from environment or defaults
-    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    claude_dir = os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude"))
-    tracker_file = Path(claude_dir) / "as_you" / "pattern_tracker.json"
-    archive_dir = Path(claude_dir) / "as_you" / "session_archive"
+    config = AsYouConfig.from_environment()
+    tracker_file = config.tracker_file
+    archive_dir = config.archive_dir
 
     # Validate paths
     if not tracker_file.exists():

@@ -4,11 +4,13 @@ Calculate TF-IDF scores for patterns in pattern_tracker.json.
 Unicode-aware implementation using Python standard library.
 """
 
-import json
 import math
 import re
 import sys
+from collections import defaultdict
 from pathlib import Path
+
+from common import AsYouConfig, load_tracker, save_tracker
 
 
 # English stopwords (common words to exclude from high scores)
@@ -76,112 +78,145 @@ def is_stopword(word: str) -> bool:
     return word.lower() in STOPWORDS
 
 
-def count_documents_containing_pattern(pattern: str, archive_dir: Path) -> int:
+def calculate_tfidf_single_pass(
+    patterns: dict[str, dict], archive_dir: Path
+) -> dict[str, tuple[float, float]]:
     """
-    Count number of documents containing the pattern (case-insensitive).
+    Calculate TF-IDF scores in single pass (O(m) instead of O(n×m)).
+
+    This optimized algorithm scans each document once and counts all patterns
+    simultaneously, instead of scanning all documents for each pattern.
 
     Args:
-        pattern: Pattern to search for
-        archive_dir: Directory containing markdown archive files
+        patterns: Pattern dictionary from tracker
+        archive_dir: Path to archive directory
 
     Returns:
-        Number of documents containing the pattern
-    """
-    count = 0
-    # Use case-insensitive regex for matching
-    pattern_re = re.compile(re.escape(pattern), re.IGNORECASE | re.UNICODE)
+        Dict mapping pattern -> (idf, tfidf)
 
-    for md_file in archive_dir.glob("*.md"):
+    Complexity:
+        Old: O(n×m) where n=patterns, m=documents
+        New: O(m) - scan documents once
+        Speedup: ~n (e.g., 100x for 100 patterns)
+
+    Examples:
+        >>> from pathlib import Path
+        >>> import tempfile
+        >>> temp_dir = Path(tempfile.mkdtemp())
+        >>> (temp_dir / "doc1.md").write_text("Python is great")
+        15
+        >>> (temp_dir / "doc2.md").write_text("Python and testing")
+        18
+        >>> patterns = {"python": {"count": 5}, "testing": {"count": 2}}
+        >>> results = calculate_tfidf_single_pass(patterns, temp_dir)
+        >>> "python" in results and "testing" in results
+        True
+        >>> import shutil
+        >>> shutil.rmtree(temp_dir)
+    """
+    # Build regex matching all patterns simultaneously
+    pattern_list = list(patterns.keys())
+    if not pattern_list:
+        return {}
+
+    # Compile single regex with word boundaries for all patterns
+    # Use word boundaries for more accurate matching
+    try:
+        pattern_regex = re.compile(
+            "|".join(rf"\b{re.escape(p)}\b" for p in pattern_list),
+            re.IGNORECASE | re.UNICODE,
+        )
+    except re.error:
+        # Fallback: without word boundaries if regex is too complex
+        pattern_regex = re.compile(
+            "|".join(re.escape(p) for p in pattern_list),
+            re.IGNORECASE | re.UNICODE,
+        )
+
+    # Single pass: count document frequency for all patterns
+    doc_freq: dict[str, int] = defaultdict(int)
+    total_docs = 0
+
+    for doc_path in archive_dir.glob("*.md"):
+        total_docs += 1
+
         try:
-            text = md_file.read_text(encoding="utf-8")
-            if pattern_re.search(text):
-                count += 1
-        except Exception as e:
-            print(f"Warning: Failed to read {md_file}: {e}", file=sys.stderr)
+            text = doc_path.read_text(encoding="utf-8")
+        except (IOError, UnicodeDecodeError) as e:
+            print(f"Warning: Failed to read {doc_path}: {e}", file=sys.stderr)
             continue
 
-    return count
+        # Find all pattern matches in this document
+        found_patterns = set()
+        for match in pattern_regex.finditer(text):
+            pattern = match.group(0).lower()
+            found_patterns.add(pattern)
+
+        # Update document frequency
+        for pattern in found_patterns:
+            doc_freq[pattern] += 1
+
+    # Calculate TF-IDF for all patterns
+    if total_docs == 0:
+        return {}
+
+    results = {}
+    for word, word_data in patterns.items():
+        tf = word_data.get("count", 0)
+        df = doc_freq.get(word.lower(), 0)
+        idf = math.log(total_docs / (df + 1))
+        tfidf = tf * idf
+
+        results[word] = (idf, tfidf)
+
+    return results
 
 
 def calculate_tfidf(tracker_file: Path, archive_dir: Path) -> None:
     """
-    Calculate TF-IDF scores for all patterns in tracker file.
+    Calculate TF-IDF scores using optimized single-pass algorithm.
 
     Args:
         tracker_file: Path to pattern_tracker.json
         archive_dir: Path to session archive directory
     """
-    # Load tracker data
-    try:
-        with tracker_file.open("r", encoding="utf-8") as f:
-            tracker_data = json.load(f)
-    except Exception as e:
-        print(f"Error: Failed to read tracker file: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Load tracker data using common utility
+    data = load_tracker(tracker_file)
+    patterns = data.get("patterns", {})
 
-    # Count total documents
-    total_docs = len(list(archive_dir.glob("*.md")))
-    if total_docs == 0:
-        print("Error: no archive files found", file=sys.stderr)
-        sys.exit(1)
-
-    # Get patterns
-    patterns = tracker_data.get("patterns", {})
     if not patterns:
         print("Warning: no patterns found in tracker", file=sys.stderr)
         return
 
-    # Calculate TF-IDF for each pattern
-    for word, word_data in patterns.items():
-        # TF: term frequency (count)
-        tf = word_data.get("count", 0)
+    # Use optimized single-pass algorithm
+    tfidf_scores = calculate_tfidf_single_pass(patterns, archive_dir)
 
-        # DF: document frequency (number of docs containing this pattern)
-        doc_freq = count_documents_containing_pattern(word, archive_dir)
+    # Update pattern data
+    for word, (idf, tfidf) in tfidf_scores.items():
+        patterns[word]["tfidf"] = round(tfidf, 6)
+        patterns[word]["idf"] = round(idf, 6)
+        patterns[word]["is_stopword"] = is_stopword(word)
 
-        # IDF: inverse document frequency
-        # Add 1 to doc_freq to avoid division by zero
-        idf = math.log(total_docs / (doc_freq + 1))
-
-        # TF-IDF score
-        tfidf = tf * idf
-
-        # Update pattern data
-        word_data["tfidf"] = round(tfidf, 6)
-        word_data["idf"] = round(idf, 6)
-        word_data["is_stopword"] = is_stopword(word)
-
-    # Write back to tracker file
-    try:
-        with tracker_file.open("w", encoding="utf-8") as f:
-            json.dump(tracker_data, f, ensure_ascii=False, indent=2)
-        print("TF-IDF scores calculated for all patterns")
-    except Exception as e:
-        print(f"Error: Failed to write tracker file: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Save tracker data using common utility
+    save_tracker(tracker_file, data)
+    print("TF-IDF scores calculated for all patterns")
 
 
 def main():
     """Main entry point for CLI usage."""
-    import os
-
-    # Get paths from environment or defaults
-    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    claude_dir = os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude"))
-    tracker_file = Path(claude_dir) / "as_you" / "pattern_tracker.json"
-    archive_dir = Path(claude_dir) / "as_you" / "session_archive"
+    config = AsYouConfig.from_environment()
 
     # Validate paths
-    if not tracker_file.exists():
+    if not config.tracker_file.exists():
         print("Error: pattern_tracker.json not found", file=sys.stderr)
         sys.exit(1)
 
-    if not archive_dir.exists() or not archive_dir.is_dir():
+    if not config.archive_dir.exists() or not config.archive_dir.is_dir():
         print("Error: archive directory not found", file=sys.stderr)
         sys.exit(1)
 
-    # Calculate TF-IDF
-    calculate_tfidf(tracker_file, archive_dir)
+    # Calculate TF-IDF using optimized algorithm
+    calculate_tfidf(config.tracker_file, config.archive_dir)
 
 
 if __name__ == "__main__":

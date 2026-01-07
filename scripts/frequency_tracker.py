@@ -10,6 +10,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
+from common import AsYouConfig
+from pattern_detector import detect_patterns_from_archives
+from context_extractor import extract_contexts as extract_contexts_func
+from cooccurrence_detector import detect_cooccurrences
+from score_calculator import UnifiedScoreCalculator
+
 
 def load_tracker(tracker_file: Path) -> Dict:
     """
@@ -186,77 +192,51 @@ def update_frequency(
 
 def main():
     """CLI entry point."""
-    import os
-    import subprocess
-
-    # Get paths from environment or defaults
-    project_root = os.getenv("PROJECT_ROOT", os.getcwd())
-    script_dir = Path(__file__).parent.parent
-    claude_dir = Path(os.getenv("CLAUDE_DIR", os.path.join(project_root, ".claude")))
-    tracker_file = claude_dir / "as_you" / "pattern_tracker.json"
+    # Get paths from environment using common config
+    config = AsYouConfig.from_environment()
 
     # Ensure archive directory exists
-    archive_dir = claude_dir / "as_you" / "session_archive"
-    archive_dir.mkdir(parents=True, exist_ok=True)
+    config.archive_dir.mkdir(parents=True, exist_ok=True)
 
-    # Get detected patterns from Python implementation
-    result = subprocess.run(
-        ["python3", str(script_dir / "lib" / "pattern_detector.py")],
-        capture_output=True,
-        text=True,
-        check=False,
-        env={**os.environ, "CLAUDE_DIR": str(claude_dir), "PROJECT_ROOT": project_root},
-    )
-
-    if result.returncode != 0:
-        print("Error detecting patterns", file=sys.stderr)
-        sys.exit(1)
-
+    # Direct function calls (no subprocess overhead)
     try:
-        patterns_data = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        print("Error parsing pattern data", file=sys.stderr)
+        # 1. Detect patterns from archives (was: subprocess call to pattern_detector.py)
+        patterns_data = detect_patterns_from_archives(config.archive_dir)
+
+        # 2. Extract contexts (was: subprocess call to extract-contexts.sh)
+        contexts_data = extract_contexts_func(
+            config.tracker_file,
+            config.archive_dir,
+            top_n=10,
+            max_contexts=5
+        )
+
+        # 3. Detect co-occurrences (was: subprocess call to detect-cooccurrence.sh)
+        cooccurrences = detect_cooccurrences(config.archive_dir)
+
+    except Exception as e:
+        print(f"Error during pattern processing: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # Extract contexts (call existing shell script for now)
-    contexts_result = subprocess.run(
-        [str(script_dir / "extract-contexts.sh")],
-        capture_output=True,
-        text=True,
-        check=False,
-        env={**os.environ, "PROJECT_ROOT": project_root, "CLAUDE_DIR": str(claude_dir)},
+    # 4. Update frequency tracker
+    stats = update_frequency(
+        config.tracker_file,
+        patterns_data,
+        contexts_data,
+        cooccurrences
     )
-    contexts_data = None
-    if contexts_result.returncode == 0 and contexts_result.stdout.strip():
-        try:
-            contexts_data = json.loads(contexts_result.stdout)
-        except json.JSONDecodeError:
-            pass
 
-    # Detect co-occurrences (call existing shell script for now)
-    cooccur_result = subprocess.run(
-        [str(script_dir / "detect-cooccurrence.sh")],
-        capture_output=True,
-        text=True,
-        check=False,
-        env={**os.environ, "PROJECT_ROOT": project_root, "CLAUDE_DIR": str(claude_dir)},
-    )
-    cooccurrences = None
-    if cooccur_result.returncode == 0 and cooccur_result.stdout.strip():
-        try:
-            cooccurrences = json.loads(cooccur_result.stdout)
-        except json.JSONDecodeError:
-            pass
-
-    # Update frequency tracker
-    stats = update_frequency(tracker_file, patterns_data, contexts_data, cooccurrences)
-
-    # Calculate scores using Python implementation
-    subprocess.run(
-        ["python3", str(script_dir / "lib" / "score_calculator.py")],
-        env={**os.environ, "PROJECT_ROOT": project_root, "CLAUDE_DIR": str(claude_dir)},
-        check=False,
-    )
+    # 5. Calculate scores using direct call (was: subprocess call to score_calculator.py)
+    try:
+        calculator = UnifiedScoreCalculator(
+            config.tracker_file,
+            config.archive_dir
+        )
+        calculator.calculate_all_scores()
+        calculator.save()
+    except Exception as e:
+        print(f"Error calculating scores: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Print statistics
     print(
