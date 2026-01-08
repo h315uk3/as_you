@@ -175,6 +175,250 @@ mise tasks
    mise run lint
    ```
 
+### Testing Prompt Files (Commands & Agents)
+
+Prompt files (`commands/*.md`, `agents/*.md`) define Claude's behavior but cannot be automatically tested. Human testing is required.
+
+**Why Manual Testing?**
+- Claude Code interprets prompts at runtime
+- AskUserQuestion UI must be visually verified
+- LLM responses are non-deterministic
+- Tool availability varies by version
+
+#### General Test Setup
+
+1. **Start Fresh Session**
+   ```bash
+   /exit
+   claude-code
+   ```
+
+2. **Verify Plugin Loaded**
+   - Check for "As You plugin loaded" message
+   - If promotion candidates exist, summary should display
+
+#### Testing Current Commands
+
+Test modified commands using these procedures:
+
+**`/as-you:note` - Add Note**
+
+```bash
+# Test 1: Add simple note
+/as-you:note Testing note functionality
+
+# Verify:
+# - Script executes: python3 scripts/commands/note_add.py
+# - Note is translated to English if non-English input
+# - Confirmation message appears
+# - File .claude/as_you/session_notes.local.md is updated
+
+# Test 2: Add note with special characters
+/as-you:note Testing with "quotes" and special: chars!
+
+# Verify: Special characters are preserved correctly
+```
+
+**`/as-you:notes` - View/Manage Notes**
+
+```bash
+# Prerequisite: Add at least one note first
+/as-you:note Test note for viewing
+
+# Test:
+/as-you:notes
+
+# Verify interactive flow:
+# 1. Current notes are displayed
+# 2. AskUserQuestion appears with options:
+#    - "View history"
+#    - "Clear current notes"
+#    - "Exit"
+# 3. Select each option and verify:
+#    - View history: Shows archived notes from .claude/as_you/session_archive/
+#    - Clear current notes: Asks confirmation, then clears
+#    - Exit: Returns without action
+```
+
+**`/as-you:memory` - Memory Dashboard**
+
+```bash
+# Test:
+/as-you:memory
+
+# Verify display:
+# 1. Statistics are shown:
+#    - Current session notes count
+#    - Archive days count
+#    - Detected patterns count
+#    - Promotion candidates count
+# 2. AskUserQuestion appears with options:
+#    - "View promotion candidates"
+#    - "Analyze patterns"
+#    - "Detect similar patterns"
+#    - "Review knowledge base"
+# 3. Test each option:
+#    - View candidates: Executes promotion_analyzer.py, shows list
+#    - Analyze patterns: Launches memory-analyzer agent
+#    - Detect similar: Executes similarity_detector.py
+#    - Review KB: Shows unused skills/agents stats
+```
+
+**`/as-you:promote` - Promote Pattern**
+
+```bash
+# Prerequisite: Have promotion candidates
+# (Add notes across multiple sessions to generate patterns)
+
+# Test 1: With candidate selection
+/as-you:promote
+
+# Verify flow:
+# 1. promotion_analyzer.py executes
+# 2. If no candidates: Shows message "No promotion candidates available yet"
+# 3. If candidates exist: AskUserQuestion shows candidate list
+# 4. After selection:
+#    - pattern_context.py retrieves pattern contexts
+#    - AI analyzes whether pattern is Skill or Agent
+#    - Component is generated
+#    - Confirmation prompt appears
+# 5. If confirmed:
+#    - File created in skills/ or agents/
+#    - promotion_marker.py marks pattern as promoted
+#    - Success message with file path
+
+# Test 2: With specific pattern name
+/as-you:promote testing
+
+# Verify: Skips candidate selection, directly promotes "testing" pattern
+```
+
+**`/as-you:workflows` - Manage Workflows**
+
+```bash
+# Prerequisite: Create a workflow first using /as-you:workflow-save
+
+# Test:
+/as-you:workflows
+
+# Verify flow:
+# 1. workflow_list.py executes
+# 2. If no workflows: Shows "No saved workflows found" + guide
+# 3. If workflows exist:
+#    - Table displays with Name and Last Updated
+#    - AskUserQuestion shows options:
+#      - "View workflow details"
+#      - "Update workflow"
+#      - "Delete workflow"
+#      - "Exit"
+# 4. Test each option:
+#    - View: Select workflow → displays content
+#    - Update: Select workflow → select update method → preview → confirm
+#    - Delete: Select workflow → confirm → deleted
+#    - Exit: Returns without action
+```
+
+**`/as-you:workflow-save` - Save New Workflow**
+
+```bash
+# Prerequisite: Perform some work (use tools: Bash, Read, Write, etc.)
+
+# Test:
+/as-you:workflow-save
+
+# Verify flow:
+# 1. Prompts for workflow name
+# 2. Analyzes last 10-20 tool uses
+# 3. Generates workflow definition
+# 4. Shows preview
+# 5. AskUserQuestion for confirmation
+# 6. If confirmed:
+#    - Creates commands/{name}.md
+#    - Success message with restart instruction
+# 7. After restart: New command /as-you:{name} should be available
+```
+
+**`/as-you:help` - Help Display**
+
+```bash
+# Test:
+/as-you:help
+
+# Verify:
+# - Plugin description displayed
+# - All commands listed with descriptions
+# - Related commands section shown
+# - Format is readable and complete
+```
+
+#### Testing Agents
+
+Agents are invoked automatically or via Task tool. Test by triggering their conditions:
+
+**`memory-analyzer`**
+```bash
+# Triggered from /as-you:memory → "Analyze patterns"
+# Verify: Analyzes pattern_tracker.json, provides recommendations
+```
+
+**`component-generator`**
+```bash
+# Triggered from /as-you:promote
+# Verify: Generates skill or agent definition based on pattern
+```
+
+**Other agents**: pattern-learner, pattern-curator, workflow-optimizer, promotion-reviewer
+- Test by invoking their specific triggering conditions
+- Verify they have access to declared tools
+- Verify they complete without errors
+
+#### Common Issues & Solutions
+
+**Frontmatter Errors:**
+```yaml
+# Missing allowed-tools
+description: "My command"
+# Error: Tools used but not declared
+# Fix: Add allowed-tools: [Bash, Read, Write]
+```
+
+**Script Path Errors:**
+```bash
+# Wrong path
+python3 scripts/my_script.py
+# Error: Script not found
+# Fix: Verify path from PROJECT_ROOT, test script directly
+```
+
+**AskUserQuestion Errors:**
+```yaml
+# Too many options (>4)
+options: [{}, {}, {}, {}, {}]
+# Error: Max 4 options (excluding auto-added "Other")
+# Fix: Combine or remove options to stay under limit
+```
+
+#### Testing Best Practices
+
+1. **Test after every prompt change** - Don't accumulate untested changes
+2. **Start fresh session** - Avoid state pollution from previous commands
+3. **Test error paths** - Try invalid inputs, cancellations
+4. **Compare with existing** - Look at similar working prompts
+5. **Document unexpected behavior** - Note for future reference
+
+#### When to Test
+
+**Must test before commit:**
+- New command/agent creation
+- Logic flow changes
+- Frontmatter modifications (allowed-tools, description)
+- Script path changes
+- AskUserQuestion structure changes
+
+**Optional testing:**
+- Minor wording improvements
+- Comment/documentation changes
+
 ### Pull Request Process
 
 **Why This Process Exists:**
