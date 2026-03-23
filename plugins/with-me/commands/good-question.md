@@ -238,28 +238,18 @@ Handle user response:
 
 **CRITICAL: Handle reference materials properly.** If the user provides reference materials (URLs, file paths, documentation links) instead of a direct answer, retrieve and analyze them before estimating.
 
-**Multi-select:** If multiple options were selected, combine all into a single answer string before estimation.
+Based on the user's answer and all previous answers, estimate the current posterior P(h | all evidence) for each hypothesis.
 
-Delegate posterior estimation to the lightweight model via the `/with-me:estimate-posterior` skill:
+State your confidence in this estimate (0.0-1.0):
+- 0.8-1.0: Clear, unambiguous answer directly identifying a hypothesis
+- 0.5-0.7: Moderate evidence, suggestive but not definitive
+- 0.3-0.5: Ambiguous answer, multiple hypotheses still plausible
 
-1. Build the arguments JSON:
-   ```json
-   {
-     "dimension_name": "<dimension_name from Step 2.1>",
-     "hypotheses": {<hypotheses object from Step 2.1>},
-     "current_posterior": {<posterior from Step 2.1>},
-     "question": "<the question you asked>",
-     "answer": "<the user's answer>",
-     "answer_history": [<last 3 Q&A pairs: {"question": "...", "answer": "..."}>]
-   }
-   ```
-2. Call `/with-me:estimate-posterior` with the JSON string as argument.
-3. Parse the returned `{"posterior": {...}, "confidence": ...}` JSON.
-4. Store as `POSTERIOR` and `CONFIDENCE`.
+**Multi-select:** Incorporate all selected answers into a single posterior estimate.
 
-**Secondary dimension updates (mandatory):** For each `suggested_secondary_dimensions` entry with `score ≥ 0.6`, call `/with-me:estimate-posterior` again with that dimension's hypotheses and posterior. Skip only if the answer covers a completely unrelated topic with no hypothesis overlap.
+**Secondary dimension updates (mandatory):** Use `suggested_secondary_dimensions` from Step 2.1. For each entry with `score ≥ 0.6`, always estimate and update posterior — skip only if the answer explicitly covers a completely unrelated topic with no implied relationship to the secondary dimension (e.g., a yes/no answer about team size when the secondary dim is about data format with zero hypothesis overlap).
 
-- Store all secondary results as `SECONDARY_DIMS` (comma-separated) and `SECONDARY_POSTERIORS` (JSON object mapping dim_id to posterior dict)
+- Store as `SECONDARY_DIMS` (comma-separated) and `SECONDARY_POSTERIORS` (JSON object mapping dim_id to posterior dict)
 
 Posterior format: `'{"hyp1": 0.x, "hyp2": 0.y, ...}'` (must sum to 1.0)
 
