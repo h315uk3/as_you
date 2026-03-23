@@ -1,6 +1,6 @@
 ---
 description: "Adaptive requirement elicitation - systematically reduce uncertainty through information-maximizing questions"
-allowed-tools: [AskUserQuestion, Bash, Skill]
+allowed-tools: [AskUserQuestion, Bash, Skill, ToolSearch]
 ---
 
 # Good Question
@@ -93,6 +93,14 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/setup_permissions.py"
 If the script reports an error, check that you are in the workspace root, `CLAUDE_PLUGIN_ROOT` is set, and `.claude/` is writable.
 
 ### 1. Initialize Session
+
+Load the Skill tool schema (required before calling any skill):
+
+```
+ToolSearch("select:Skill")
+```
+
+Then initialize the session:
 
 ```bash
 export PYTHONPATH="${CLAUDE_PLUGIN_ROOT}"
@@ -238,18 +246,28 @@ Handle user response:
 
 **CRITICAL: Handle reference materials properly.** If the user provides reference materials (URLs, file paths, documentation links) instead of a direct answer, retrieve and analyze them before estimating.
 
-Based on the user's answer and all previous answers, estimate the current posterior P(h | all evidence) for each hypothesis.
+**Multi-select:** If multiple options were selected, combine all into a single answer string before estimation.
 
-State your confidence in this estimate (0.0-1.0):
-- 0.8-1.0: Clear, unambiguous answer directly identifying a hypothesis
-- 0.5-0.7: Moderate evidence, suggestive but not definitive
-- 0.3-0.5: Ambiguous answer, multiple hypotheses still plausible
+Delegate posterior estimation to the lightweight model via the `/with-me:estimate-posterior` skill:
 
-**Multi-select:** Incorporate all selected answers into a single posterior estimate.
+1. Build the arguments JSON:
+   ```json
+   {
+     "dimension_name": "<dimension_name from Step 2.1>",
+     "hypotheses": {<hypotheses object from Step 2.1>},
+     "current_posterior": {<posterior from Step 2.1>},
+     "question": "<the question you asked>",
+     "answer": "<the user's answer>",
+     "answer_history": [<last 3 Q&A pairs: {"question": "...", "answer": "..."}>]
+   }
+   ```
+2. Call the `with-me:estimate-posterior` skill with the JSON string as argument.
+3. Parse the returned `{"posterior": {...}, "confidence": ...}` JSON.
+4. Store as `POSTERIOR` and `CONFIDENCE`.
 
-**Secondary dimension updates (mandatory):** Use `suggested_secondary_dimensions` from Step 2.1. For each entry with `score ≥ 0.6`, always estimate and update posterior — skip only if the answer explicitly covers a completely unrelated topic with no implied relationship to the secondary dimension (e.g., a yes/no answer about team size when the secondary dim is about data format with zero hypothesis overlap).
+**Secondary dimension updates (mandatory):** For each `suggested_secondary_dimensions` entry with `score ≥ 0.6`, call the skill again with that dimension's hypotheses and current posterior. Skip only if the answer covers a completely unrelated topic with no hypothesis overlap.
 
-- Store as `SECONDARY_DIMS` (comma-separated) and `SECONDARY_POSTERIORS` (JSON object mapping dim_id to posterior dict)
+- Store all secondary results as `SECONDARY_DIMS` (comma-separated) and `SECONDARY_POSTERIORS` (JSON object mapping dim_id to posterior dict)
 
 Posterior format: `'{"hyp1": 0.x, "hyp2": 0.y, ...}'` (must sum to 1.0)
 
