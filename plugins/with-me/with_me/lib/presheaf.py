@@ -576,7 +576,11 @@ class PresheafChecker:
             ...     "data": HypothesisSet(
             ...         "data",
             ...         ["structured", "unstructured", "streaming"],
-            ...         alpha={"structured": 8.0, "unstructured": 1.0, "streaming": 1.0},
+            ...         alpha={
+            ...             "structured": 8.0,
+            ...             "unstructured": 1.0,
+            ...             "streaming": 1.0,
+            ...         },
             ...     ),
             ... }
             >>> kst_state = frozenset({"purpose"})
@@ -623,7 +627,11 @@ class PresheafChecker:
             ...     "data": HypothesisSet(
             ...         "data",
             ...         ["structured", "unstructured", "streaming"],
-            ...         alpha={"structured": 8.0, "unstructured": 1.0, "streaming": 1.0},
+            ...         alpha={
+            ...             "structured": 8.0,
+            ...             "unstructured": 1.0,
+            ...             "streaming": 1.0,
+            ...         },
             ...     ),
             ... }
             >>> checker2.get_unconstrained_focus_areas(

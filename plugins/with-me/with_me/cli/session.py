@@ -242,7 +242,9 @@ def cmd_next_question(args: argparse.Namespace) -> None:
         for dim_id, hs in orch.beliefs.items():
             phase = classify_question_phase(
                 hs,
-                phase_explore_threshold=phase_config.get("phase_explore_threshold", 0.85),
+                phase_explore_threshold=phase_config.get(
+                    "phase_explore_threshold", 0.85
+                ),
                 dominant_threshold=phase_config.get("dominant_threshold", 0.50),
                 validation_threshold=phase_config.get("validation_threshold", 0.80),
             )

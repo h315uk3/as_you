@@ -285,7 +285,9 @@ class SessionOrchestrator:
             ...     for h in hyps:
             ...         hs.alpha[h] = 1.0
             ...     hs.alpha[hyps[0]] = 20.0  # max_p ≈ 0.87 → validate phase
-            ...     hs._cached_entropy = 0.5   # < prerequisite_threshold_default → in KST state
+            ...     hs._cached_entropy = (
+            ...         0.5  # < prerequisite_threshold_default → in KST state
+            ...     )
             >>> orch2.check_convergence()
             True
 
@@ -329,7 +331,9 @@ class SessionOrchestrator:
                 return False
             phase = classify_question_phase(
                 hs,
-                phase_explore_threshold=phase_config.get("phase_explore_threshold", 0.85),
+                phase_explore_threshold=phase_config.get(
+                    "phase_explore_threshold", 0.85
+                ),
                 dominant_threshold=phase_config.get("dominant_threshold", 0.50),
                 validation_threshold=phase_config.get("validation_threshold", 0.80),
             )
