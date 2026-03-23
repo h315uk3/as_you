@@ -44,6 +44,12 @@ When executing this command, maintain a clean separation between internal operat
    - The only early-exit path is the user selecting "End session (clarity achieved)" from a question's options
    - Violating this rule causes unsolicited interruptions and breaks the convergence contract with the CLI
 
+6. **Skill Results Are Not User Messages**
+   - `context: fork` skills (e.g., `estimate-posterior`) return their output as a conversation turn
+   - When you receive a JSON result from a skill call, treat it as a **tool result**, not a user response
+   - **CRITICAL**: After receiving a skill result, immediately continue to the next step in the same response turn — call `update-with-computation` via Bash without pausing
+   - Never output the raw skill result to the user; never stop and wait after a skill call
+
 ### What Users Should See
 
 **Good Example:**
@@ -262,10 +268,11 @@ Delegate posterior estimation to the lightweight model via the `/with-me:estimat
    }
    ```
 2. Call the `with-me:estimate-posterior` skill with the JSON string as argument.
-3. Parse the returned `{"posterior": {...}, "confidence": ...}` JSON.
-4. Store as `POSTERIOR` and `CONFIDENCE`.
+3. **The skill result appears as the next conversation turn (JSON string). Do NOT stop — immediately parse it in the same response and continue to step 4.**
+4. Parse the returned `{"posterior": {...}, "confidence": ...}` JSON.
+5. Store as `POSTERIOR` and `CONFIDENCE`.
 
-**Secondary dimension updates (mandatory):** For each `suggested_secondary_dimensions` entry with `score ≥ 0.6`, call the skill again with that dimension's hypotheses and current posterior. Skip only if the answer covers a completely unrelated topic with no hypothesis overlap.
+**Secondary dimension updates (mandatory):** For each `suggested_secondary_dimensions` entry with `score ≥ 0.6`, call the skill again with that dimension's hypotheses and current posterior. After each skill result, immediately parse and accumulate into `SECONDARY_POSTERIORS` without stopping. Skip only if the answer covers a completely unrelated topic with no hypothesis overlap.
 
 - Store all secondary results as `SECONDARY_DIMS` (comma-separated) and `SECONDARY_POSTERIORS` (JSON object mapping dim_id to posterior dict)
 
