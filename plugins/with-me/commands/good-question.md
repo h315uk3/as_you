@@ -286,7 +286,7 @@ Notes:
 - If `low_ig: true` in response: next question should more directly distinguish the top-2 posterior hypotheses by name
 - Feedback is recorded automatically by this command. Do NOT call `feedback record` separately.
 
-From the response JSON, read only `information_gain` and `low_ig`. Discard all other fields. Do NOT show output to the user.
+From the response JSON, retain `information_gain`, `low_ig`, `question_count`, and `converged`. Discard all other fields. Do NOT show output to the user.
 
 **Negative Information Gain (IG < 0):**
 

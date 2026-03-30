@@ -232,8 +232,9 @@ def _augment_secondary_dimensions(
     - ``hypotheses_detail``: list of ``{id, name, description}`` for the target dimension
     - ``current_posterior``: current probability distribution over hypotheses
 
-    These fields are required for ``estimate-posterior`` skill invocation on secondary
-    dimensions, which otherwise only receives hypothesis IDs from presheaf output.
+    These fields enrich the ``next-question`` CLI output so Claude can perform
+    inline posterior estimation on secondary dimensions, instead of only seeing
+    opaque hypothesis IDs from presheaf output.
 
     Args:
         suggestions: Output of ``suggest_secondary_dimensions`` (mutated in-place)
