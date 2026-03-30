@@ -149,7 +149,8 @@ If `"converged": true`, skip to step 3. Otherwise, the output contains:
 - All phases: `converged`, `dimension`, `dimension_name`, `question_phase`, `posterior`, `hypotheses`, `supports_multi_select`, `suggested_secondary_dimensions`, `clarification_needed`, `question_guidelines`, `question_count`
 - `discriminate` and later: also read `dominant_hypothesis`, `dominant_probability`
 - `specify` / `validate` only: also read `uncovered_focus_areas`, `presheaf_free_focus_areas`, `suggested_focus_area`
-- Skip entirely: `epistemic_entropy`, `aleatoric_entropy`, `epistemic_ratio`, `focus_areas`, `importance`, `dimension_description`
+- `explore` only: also read `focus_areas`
+- Skip entirely: `epistemic_entropy`, `aleatoric_entropy`, `epistemic_ratio`, `importance`, `dimension_description`
 
 **IMPORTANT:** Do NOT mention dimension names or technical terms to the user.
 
@@ -256,11 +257,11 @@ Handle user response:
 
 Delegate posterior estimation to the lightweight model via the `/with-me:estimate-posterior` skill:
 
-1. Build the arguments JSON:
+1. Build the arguments JSON. Note: `next-question` returns `hypotheses` as an **array** of `{id, name, description, focus_areas}` objects — convert to an id→object mapping before passing to the skill:
    ```json
    {
      "dimension_name": "<dimension_name from Step 2.1>",
-     "hypotheses": {<hypotheses object from Step 2.1>},
+     "hypotheses": {"<hyp_id>": {"name": "...", "description": "..."}, ...},
      "current_posterior": {<posterior from Step 2.1>},
      "question": "<the question you asked>",
      "answer": "<the user's answer>",
@@ -272,7 +273,7 @@ Delegate posterior estimation to the lightweight model via the `/with-me:estimat
 4. Parse the returned `{"posterior": {...}, "confidence": ...}` JSON.
 5. Store as `POSTERIOR` and `CONFIDENCE`.
 
-**Secondary dimension updates (mandatory):** For each `suggested_secondary_dimensions` entry with `score ≥ 0.6`, call the skill again with that dimension's hypotheses and current posterior. After each skill result, immediately parse and accumulate into `SECONDARY_POSTERIORS` without stopping. Skip only if the answer covers a completely unrelated topic with no hypothesis overlap.
+**Secondary dimension updates (mandatory):** For each `suggested_secondary_dimensions` entry with `score ≥ 0.6`, call the skill again using `hypotheses_detail` and `current_posterior` from the entry (both included in `suggested_secondary_dimensions` output since they are needed for skill invocation). Convert `hypotheses_detail` array to an id→object mapping the same way as for the primary dimension. After each skill result, immediately parse and accumulate into `SECONDARY_POSTERIORS` without stopping. Skip only if the answer covers a completely unrelated topic with no hypothesis overlap.
 
 - Store all secondary results as `SECONDARY_DIMS` (comma-separated) and `SECONDARY_POSTERIORS` (JSON object mapping dim_id to posterior dict)
 
@@ -326,7 +327,7 @@ If `information_gain` is slightly negative (≥ -0.05 and < 0):
 
 #### 2.4. Display Progress (Conditional)
 
-**Only call when** `question_count` is a multiple of 5 (i.e., after questions 5, 10, 15, ...) or immediately after convergence. Skip on all other turns to avoid accumulating status JSON in context.
+**Only call when** `question_count` is a multiple of 5 (i.e., after questions 5, 10, 15, ...). Skip on all other turns to avoid accumulating status JSON in context.
 
 ```bash
 export PYTHONPATH="${CLAUDE_PLUGIN_ROOT}"

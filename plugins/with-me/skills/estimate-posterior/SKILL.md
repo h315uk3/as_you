@@ -2,6 +2,7 @@
 description: "Estimate Bayesian posterior distribution over hypotheses from a user answer. Used internally by good-question to delegate inference to a lightweight model."
 context: fork
 model: haiku
+allowed-tools: []
 ---
 
 # Posterior Estimation
