@@ -1,6 +1,6 @@
 ---
 description: "Adaptive requirement elicitation - systematically reduce uncertainty through information-maximizing questions"
-allowed-tools: [AskUserQuestion, Bash]
+allowed-tools: [AskUserQuestion, Bash, Skill]
 ---
 
 # Good Question
@@ -267,7 +267,8 @@ python3 -m with_me.cli.session update-with-computation \
   --question <QUESTION> \
   --answer <ANSWER> \
   --posterior "$POSTERIOR" \
-  --confidence <CONFIDENCE>
+  --confidence <CONFIDENCE> \
+  --compact
 ```
 
 Additional flags when secondary dimensions identified:
@@ -308,7 +309,7 @@ If `information_gain` is slightly negative (≥ -0.05 and < 0):
 
 ```bash
 export PYTHONPATH="${CLAUDE_PLUGIN_ROOT}"
-python3 -m with_me.cli.session status --session-id <SESSION_ID>
+python3 -m with_me.cli.session status --session-id <SESSION_ID> --compact
 ```
 
 **IMPORTANT:** Do NOT show raw JSON. Translate to user-friendly language:
