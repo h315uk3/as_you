@@ -118,11 +118,11 @@ If `"converged": true`, skip to step 3. Otherwise, the output contains:
 - `dimension`, `dimension_name`, `dimension_description`: Dimension metadata (internal use)
 - `focus_areas`: Key topics to probe
 - `hypotheses`: Possible answers with descriptions and focus areas
-- `importance`: Dimension weight (used in evaluation, step 2.2b)
-- `posterior`: Current probability distribution over hypotheses (used in evaluation)
+- `posterior`: Current probability distribution over hypotheses
 - `supports_multi_select`: Whether multiple selections are allowed
 - `epistemic_entropy`, `aleatoric_entropy`, `epistemic_ratio`: BALD decomposition (internal use — epistemic = reducible uncertainty)
-- `suggested_secondary_dimensions`: Dimensions that would benefit from cross-dimension updates based on presheaf restriction maps. Each entry has `dimension`, `score`, and `hypotheses`.
+- `importance`: Dimension weight (internal use)
+- `suggested_secondary_dimensions`: Dimensions that would benefit from cross-dimension updates based on presheaf restriction maps. Each entry has `dimension`, `score`, `hypotheses` (list of hypothesis IDs), `hypotheses_detail` (list of `{id, name, description}`), and `current_posterior`.
 - `question_phase`: Current phase for this dimension: `"explore"`, `"discriminate"`, `"specify"`, `"validate"`, or `"clarify"`.
 - `dominant_hypothesis`, `dominant_probability`: Highest-posterior hypothesis and its probability.
 - `question_guidelines`: Phase-keyed guidance strings from dimension config.
