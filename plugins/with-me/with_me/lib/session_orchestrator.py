@@ -110,9 +110,7 @@ class SessionOrchestrator:
         >>> import tempfile, shutil
         >>> from pathlib import Path
         >>> _tmp = Path(tempfile.mkdtemp())
-        >>> orch = SessionOrchestrator(
-        ...     feedback_file_path=_tmp / "feedback.json"
-        ... )
+        >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
         >>> session_id = orch.initialize_session()
 
         >>> # Main loop (simplified) - use demo mode for actual testing
@@ -196,9 +194,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> session_id = orch.initialize_session()
             >>> len(session_id) > 0
             True
@@ -242,9 +238,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> orch.record_information_gain(0.5)
             >>> orch.record_information_gain(0.3)
@@ -273,9 +267,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> # Initially not converged (uniform priors → explore phase)
             >>> orch.check_convergence()
@@ -287,9 +279,7 @@ class SessionOrchestrator:
             True
 
             >>> # All accessible dims in validate phase → converged
-            >>> orch2 = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback2.json"
-            ... )
+            >>> orch2 = SessionOrchestrator(feedback_file_path=_tmp / "feedback2.json")
             >>> _ = orch2.initialize_session()
             >>> for hs in orch2.beliefs.values():
             ...     hyps = list(hs.alpha.keys())
@@ -303,9 +293,7 @@ class SessionOrchestrator:
             True
 
             >>> # clarification_needed blocks convergence even if validate phase
-            >>> orch3 = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback3.json"
-            ... )
+            >>> orch3 = SessionOrchestrator(feedback_file_path=_tmp / "feedback3.json")
             >>> _ = orch3.initialize_session()
             >>> for hs in orch3.beliefs.values():
             ...     hyps = list(hs.alpha.keys())
@@ -367,9 +355,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> orch._get_current_kst_state()  # All uniform → empty state
             frozenset()
@@ -400,9 +386,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> accessible = orch._get_accessible_dimensions()
             >>> any(d[0] == "purpose" for d in accessible)
@@ -492,9 +476,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> dim = orch.select_next_dimension()
             >>> dim == "purpose"  # Purpose has no prerequisites
@@ -616,9 +598,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> # Successful question (high IG)
             >>> orch.update_thompson_state("purpose", 0.5)
@@ -662,9 +642,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> question = orch.generate_question("purpose")
             >>> "placeholder" in question.lower()
@@ -696,9 +674,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> dim, question = orch.select_next_question()
             >>> dim == "purpose"  # Purpose has no prerequisites
@@ -745,9 +721,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> result = orch.update_beliefs("purpose", "What?", "Web app")
             >>> "information_gain" in result
@@ -772,9 +746,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> state = orch.get_current_state()
             >>> "dimensions" in state
@@ -854,9 +826,7 @@ class SessionOrchestrator:
             >>> import tempfile, shutil
             >>> from pathlib import Path
             >>> _tmp = Path(tempfile.mkdtemp())
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=_tmp / "feedback.json"
-            ... )
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> summary = orch.complete_session()
             >>> summary["total_questions"] == 0
