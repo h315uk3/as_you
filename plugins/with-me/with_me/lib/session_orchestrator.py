@@ -107,10 +107,10 @@ class SessionOrchestrator:
 
     Examples:
         >>> # Initialize orchestrator
+        >>> import tempfile, shutil
         >>> from pathlib import Path
-        >>> orch = SessionOrchestrator(
-        ...     feedback_file_path=Path("/tmp/test_feedback.json")
-        ... )
+        >>> _tmp = Path(tempfile.mkdtemp())
+        >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
         >>> session_id = orch.initialize_session()
 
         >>> # Main loop (simplified) - use demo mode for actual testing
@@ -123,6 +123,7 @@ class SessionOrchestrator:
         >>> summary = orch.complete_session()
         >>> summary["total_questions"] == 0  # No questions asked in doctest
         True
+        >>> shutil.rmtree(_tmp)
     """
 
     def __init__(
@@ -190,13 +191,14 @@ class SessionOrchestrator:
             Session ID for tracking
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-        >>> orch = SessionOrchestrator(
-        ...     feedback_file_path=Path("/tmp/test_feedback.json")
-        ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> session_id = orch.initialize_session()
             >>> len(session_id) > 0
             True
+            >>> shutil.rmtree(_tmp)
         """
         # Create default dimension beliefs (uniform priors)
         self.beliefs = create_default_dimension_beliefs()
@@ -233,15 +235,16 @@ class SessionOrchestrator:
             ig: Information gain in bits from the last question
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=Path("/tmp/test_feedback.json")
-            ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> orch.record_information_gain(0.5)
             >>> orch.record_information_gain(0.3)
             >>> len(orch.recent_information_gains)
             2
+            >>> shutil.rmtree(_tmp)
         """
         self.recent_information_gains.append(ig)
 
@@ -261,10 +264,10 @@ class SessionOrchestrator:
             True if converged, False otherwise
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=Path("/tmp/test_feedback.json")
-            ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> # Initially not converged (uniform priors → explore phase)
             >>> orch.check_convergence()
@@ -276,9 +279,7 @@ class SessionOrchestrator:
             True
 
             >>> # All accessible dims in validate phase → converged
-            >>> orch2 = SessionOrchestrator(
-            ...     feedback_file_path=Path("/tmp/test_feedback2.json")
-            ... )
+            >>> orch2 = SessionOrchestrator(feedback_file_path=_tmp / "feedback2.json")
             >>> _ = orch2.initialize_session()
             >>> for hs in orch2.beliefs.values():
             ...     hyps = list(hs.alpha.keys())
@@ -292,9 +293,7 @@ class SessionOrchestrator:
             True
 
             >>> # clarification_needed blocks convergence even if validate phase
-            >>> orch3 = SessionOrchestrator(
-            ...     feedback_file_path=Path("/tmp/test_feedback3.json")
-            ... )
+            >>> orch3 = SessionOrchestrator(feedback_file_path=_tmp / "feedback3.json")
             >>> _ = orch3.initialize_session()
             >>> for hs in orch3.beliefs.values():
             ...     hyps = list(hs.alpha.keys())
@@ -305,6 +304,7 @@ class SessionOrchestrator:
             >>> orch3.clarification_needed["purpose"] = True
             >>> orch3.check_convergence()
             False
+            >>> shutil.rmtree(_tmp)
         """
         # 1. Max question limit (safety fallback)
         max_questions = self.config["session_config"]["max_questions"]
@@ -352,10 +352,10 @@ class SessionOrchestrator:
             Feasible knowledge state (frozenset of resolved dimension IDs)
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=Path("/tmp/test_feedback.json")
-            ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> orch._get_current_kst_state()  # All uniform → empty state
             frozenset()
@@ -363,6 +363,7 @@ class SessionOrchestrator:
             >>> orch.beliefs["purpose"]._cached_entropy = 0.5
             >>> sorted(orch._get_current_kst_state())
             ['purpose']
+            >>> shutil.rmtree(_tmp)
         """
         threshold = self.config["session_config"].get(
             "prerequisite_threshold_default", 1.8
@@ -382,10 +383,10 @@ class SessionOrchestrator:
             epistemic_score = epistemic_entropy / H_max, measuring reducible uncertainty.
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=Path("/tmp/test_feedback.json")
-            ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> accessible = orch._get_accessible_dimensions()
             >>> any(d[0] == "purpose" for d in accessible)
@@ -395,7 +396,7 @@ class SessionOrchestrator:
 
             >>> # With purpose resolved, dependent dimensions become accessible
             >>> orch_p = SessionOrchestrator(
-            ...     feedback_file_path=Path("/tmp/test_feedback_p.json")
+            ...     feedback_file_path=_tmp / "feedback_p.json"
             ... )
             >>> _ = orch_p.initialize_session()
             >>> orch_p.beliefs["purpose"]._cached_entropy = 0.5
@@ -407,6 +408,7 @@ class SessionOrchestrator:
             True
             >>> "constraints" not in ids_p  # constraints requires behavior AND data
             True
+            >>> shutil.rmtree(_tmp)
         """
         current_state = self._get_current_kst_state()
         fringe = self.knowledge_space.outer_fringe(current_state)
@@ -471,10 +473,10 @@ class SessionOrchestrator:
             Dimension ID to query, or None if no accessible dimensions
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=Path("/tmp/test_feedback.json")
-            ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> dim = orch.select_next_dimension()
             >>> dim == "purpose"  # Purpose has no prerequisites
@@ -513,7 +515,7 @@ class SessionOrchestrator:
             >>> # Context bonus: with purpose in KST state, adjacent outer fringe dims
             >>> # (data, behavior, stakeholders) receive +0.1 per connected inner fringe dim
             >>> orch_cb = SessionOrchestrator(
-            ...     feedback_file_path=Path("/tmp/test_feedback_cb.json")
+            ...     feedback_file_path=_tmp / "feedback_cb.json"
             ... )
             >>> _ = orch_cb.initialize_session()
             >>> orch_cb.beliefs["purpose"]._cached_entropy = 0.5  # purpose resolved
@@ -531,6 +533,7 @@ class SessionOrchestrator:
             True
             >>> len(adj["context"]) == 0  # context has no DAG edge to inner fringe
             True
+            >>> shutil.rmtree(_tmp)
         """
         accessible = self._get_accessible_dimensions()
 
@@ -592,10 +595,10 @@ class SessionOrchestrator:
             information_gain: IG in bits from the question
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-            >>> orch = SessionOrchestrator(
-            ...     feedback_file_path=Path("/tmp/test_feedback.json")
-            ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> # Successful question (high IG)
             >>> orch.update_thompson_state("purpose", 0.5)
@@ -610,6 +613,7 @@ class SessionOrchestrator:
             3.0
             >>> orch.thompson_states["purpose"]["beta"]
             2.0
+            >>> shutil.rmtree(_tmp)
         """
         epsilon = self.config["session_config"].get("diminishing_returns_epsilon", 0.05)
 
@@ -635,14 +639,15 @@ class SessionOrchestrator:
             Placeholder question text
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-        >>> orch = SessionOrchestrator(
-        ...     feedback_file_path=Path("/tmp/test_feedback.json")
-        ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> question = orch.generate_question("purpose")
             >>> "placeholder" in question.lower()
             True
+            >>> shutil.rmtree(_tmp)
         """
         # Question generation now handled by Claude in good-question.md workflow
         # See Step 2.1-2.2 for context-aware question generation
@@ -666,16 +671,17 @@ class SessionOrchestrator:
             Tuple of (dimension, question) or (None, None) if converged
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-        >>> orch = SessionOrchestrator(
-        ...     feedback_file_path=Path("/tmp/test_feedback.json")
-        ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> dim, question = orch.select_next_question()
             >>> dim == "purpose"  # Purpose has no prerequisites
             True
             >>> "placeholder" in question.lower()
             True
+            >>> shutil.rmtree(_tmp)
         """
         # Select dimension
         dimension = self.select_next_dimension()
@@ -712,14 +718,15 @@ class SessionOrchestrator:
             Dictionary with update results (stub values for demo)
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-        >>> orch = SessionOrchestrator(
-        ...     feedback_file_path=Path("/tmp/test_feedback.json")
-        ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> result = orch.update_beliefs("purpose", "What?", "Web app")
             >>> "information_gain" in result
             True
+            >>> shutil.rmtree(_tmp)
         """
         self.question_count += 1
         return {
@@ -736,14 +743,15 @@ class SessionOrchestrator:
             Dictionary with entropy, confidence, convergence status per dimension
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-        >>> orch = SessionOrchestrator(
-        ...     feedback_file_path=Path("/tmp/test_feedback.json")
-        ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> state = orch.get_current_state()
             >>> "dimensions" in state
             True
+            >>> shutil.rmtree(_tmp)
         """
         conv_threshold = self.config["session_config"]["convergence_threshold"]
         current_state = self._get_current_kst_state()
@@ -815,14 +823,15 @@ class SessionOrchestrator:
             Dictionary with session summary
 
         Examples:
+            >>> import tempfile, shutil
             >>> from pathlib import Path
-        >>> orch = SessionOrchestrator(
-        ...     feedback_file_path=Path("/tmp/test_feedback.json")
-        ... )
+            >>> _tmp = Path(tempfile.mkdtemp())
+            >>> orch = SessionOrchestrator(feedback_file_path=_tmp / "feedback.json")
             >>> _ = orch.initialize_session()
             >>> summary = orch.complete_session()
             >>> summary["total_questions"] == 0
             True
+            >>> shutil.rmtree(_tmp)
         """
         total_questions = self.question_count
         total_info_gain = sum(
