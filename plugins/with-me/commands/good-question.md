@@ -118,11 +118,11 @@ If `"converged": true`, skip to step 3. Otherwise, the output contains:
 - `dimension`, `dimension_name`, `dimension_description`: Dimension metadata (internal use)
 - `focus_areas`: Key topics to probe
 - `hypotheses`: Possible answers with descriptions and focus areas
-- `importance`: Dimension weight (used in evaluation, step 2.2b)
-- `posterior`: Current probability distribution over hypotheses (used in evaluation)
+- `posterior`: Current probability distribution over hypotheses
 - `supports_multi_select`: Whether multiple selections are allowed
 - `epistemic_entropy`, `aleatoric_entropy`, `epistemic_ratio`: BALD decomposition (internal use — epistemic = reducible uncertainty)
-- `suggested_secondary_dimensions`: Dimensions that would benefit from cross-dimension updates based on presheaf restriction maps. Each entry has `dimension`, `score`, and `hypotheses`.
+- `importance`: Dimension weight (internal use)
+- `suggested_secondary_dimensions`: Dimensions that would benefit from cross-dimension updates based on presheaf restriction maps. Each entry has `dimension`, `score`, `hypotheses` (list of hypothesis IDs), `hypotheses_detail` (list of `{id, name, description}`), and `current_posterior`.
 - `question_phase`: Current phase for this dimension: `"explore"`, `"discriminate"`, `"specify"`, `"validate"`, or `"clarify"`.
 - `dominant_hypothesis`, `dominant_probability`: Highest-posterior hypothesis and its probability.
 - `question_guidelines`: Phase-keyed guidance strings from dimension config.
@@ -130,6 +130,13 @@ If `"converged": true`, skip to step 3. Otherwise, the output contains:
 - `suggested_focus_area`: First uncovered focus area (null if all covered); fallback target in specify phase.
 - `presheaf_free_focus_areas`: Uncovered focus areas of the dominant hypothesis that are NOT already constrained by resolved dimensions' restriction maps. Non-empty = safe to probe details; empty = presheaf conflict detected, hypothesis-level discrimination may be needed.
 - `clarification_needed`: Whether this dimension has a detected contradiction requiring resolution.
+
+**Phase-based field filter (context efficiency):** Read only the fields relevant to `question_phase` — do not carry unused fields in your working memory:
+- All phases: `converged`, `dimension`, `dimension_name`, `question_phase`, `posterior`, `hypotheses`, `supports_multi_select`, `suggested_secondary_dimensions`, `clarification_needed`, `question_guidelines`, `question_count`
+- `discriminate` and later: also read `dominant_hypothesis`, `dominant_probability`
+- `specify` / `validate` only: also read `uncovered_focus_areas`, `presheaf_free_focus_areas`, `suggested_focus_area`
+- `explore` only: also read `focus_areas`
+- Skip entirely: `epistemic_entropy`, `aleatoric_entropy`, `epistemic_ratio`, `importance`, `dimension_description`
 
 **IMPORTANT:** Do NOT mention dimension names or technical terms to the user.
 
@@ -232,6 +239,8 @@ Handle user response:
 
 **CRITICAL: Handle reference materials properly.** If the user provides reference materials (URLs, file paths, documentation links) instead of a direct answer, retrieve and analyze them before estimating.
 
+**Multi-select:** If multiple options were selected, combine all into a single answer string before estimation.
+
 Based on the user's answer and all previous answers, estimate the current posterior P(h | all evidence) for each hypothesis.
 
 State your confidence in this estimate (0.0-1.0):
@@ -239,9 +248,9 @@ State your confidence in this estimate (0.0-1.0):
 - 0.5-0.7: Moderate evidence, suggestive but not definitive
 - 0.3-0.5: Ambiguous answer, multiple hypotheses still plausible
 
-**Multi-select:** Incorporate all selected answers into a single posterior estimate.
+Store as `POSTERIOR` and `CONFIDENCE`.
 
-**Secondary dimension identification (strongly recommended):** Use `suggested_secondary_dimensions` from Step 2.1. For each suggested dimension with score > 0.5, estimate posterior if the answer provides relevant evidence.
+**Secondary dimension updates (mandatory):** Use `suggested_secondary_dimensions` from Step 2.1. For each entry with `score ≥ 0.6`, always estimate and update posterior — skip only if the answer explicitly covers a completely unrelated topic with no implied relationship to the secondary dimension. Each entry includes `hypotheses_detail` (list of `{id, name, description}`) and `current_posterior` for the target dimension to aid estimation.
 
 - Store as `SECONDARY_DIMS` (comma-separated) and `SECONDARY_POSTERIORS` (JSON object mapping dim_id to posterior dict)
 
@@ -258,7 +267,8 @@ python3 -m with_me.cli.session update-with-computation \
   --question <QUESTION> \
   --answer <ANSWER> \
   --posterior "$POSTERIOR" \
-  --confidence <CONFIDENCE>
+  --confidence <CONFIDENCE> \
+  --compact
 ```
 
 Additional flags when secondary dimensions identified:
@@ -276,7 +286,7 @@ Notes:
 - If `low_ig: true` in response: next question should more directly distinguish the top-2 posterior hypotheses by name
 - Feedback is recorded automatically by this command. Do NOT call `feedback record` separately.
 
-Do NOT show output to the user.
+From the response JSON, retain `information_gain`, `low_ig`, `question_count`, and `converged`. Discard all other fields. Do NOT show output to the user.
 
 **Negative Information Gain (IG < 0):**
 
@@ -293,11 +303,13 @@ If `information_gain` is significantly negative (< -0.05):
 If `information_gain` is slightly negative (≥ -0.05 and < 0):
 - Treat as noise. Continue normally.
 
-#### 2.4. Display Progress (Optional)
+#### 2.4. Display Progress (Conditional)
+
+**Only call when** `question_count` is a multiple of 5 (i.e., after questions 5, 10, 15, ...). Skip on all other turns to avoid accumulating status JSON in context.
 
 ```bash
 export PYTHONPATH="${CLAUDE_PLUGIN_ROOT}"
-python3 -m with_me.cli.session status --session-id <SESSION_ID>
+python3 -m with_me.cli.session status --session-id <SESSION_ID> --compact
 ```
 
 **IMPORTANT:** Do NOT show raw JSON. Translate to user-friendly language:

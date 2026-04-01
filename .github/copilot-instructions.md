@@ -1,8 +1,8 @@
 # Symbiosis - Copilot Instructions
 
-Instructions for GitHub Copilot code completion and code review.
+Instructions for GitHub Copilot code completion.
 
-Path-specific standards are defined in `.github/instructions/*.instructions.md` — this file covers project-wide context and review policy.
+Path-specific standards are defined in `.github/instructions/*.instructions.md` — this file covers project-wide context.
 
 ---
 
@@ -24,41 +24,6 @@ Symbiosis is a local-first, privacy-by-design Human-AI development tool suite. T
 
 - `.monitoring/` — Local-only Docker dev tooling (OTEL Collector, Prometheus, Loki, Grafana). Not production infrastructure. Ephemeral, user-controlled, `:latest` tags are intentional.
 - Shell scripts — Minimal glue code under 10 lines delegating to Python. `set -euo pipefail` provides sufficient error handling for local dev scripts.
-
----
-
-## Code Review Policy
-
-### Comment only when the issue is actionable and correct
-
-Before commenting, verify:
-
-1. **Is the claim factually correct?** Check syntax rules, API docs, and language specs before flagging "incorrect" usage. Do not guess.
-2. **Does this require a code change?** If no change is needed, do not comment.
-3. **Is this already handled?** Linters (`ruff`), type checkers (`pyright`), and CI catch style, formatting, and type issues. Do not duplicate their coverage.
-
-### Comment priorities (descending)
-
-1. **Security vulnerabilities** — injection, path traversal, secret exposure
-2. **Logic bugs** — incorrect behavior, wrong algorithm, off-by-one
-3. **Data loss risk** — unhandled errors that silently corrupt or drop data
-4. **API misuse** — calling functions with wrong types or invalid arguments
-
-### Do not comment on
-
-- **Style or formatting** — `ruff` enforces this. No opinions on naming, spacing, quote style.
-- **Type annotations** — `pyright` enforces this. No suggestions about types.
-- **Informational observations** — "This could be X" or "Consider Y" without a concrete problem.
-- **PR description accuracy** — Description text is not code. Do not review it.
-- **Standard configuration patterns** — Loki schema dates, Docker `:latest` tags for dev tooling, `chmod` permissions for local containers. These are intentional choices for a local dev stack.
-- **Over-engineering suggestions** — Do not suggest additional error handling, abstraction layers, configurability, or defensive code beyond what is needed. This project values simplicity.
-- **Alternative syntaxes** — If valid syntax is used (e.g., LogQL backticks, shell parameter expansion), do not suggest alternatives.
-
-### Scope
-
-- Review only the diff. Do not comment on unchanged code.
-- One comment per distinct issue. Do not repeat the same finding across multiple lines.
-- If uncertain whether something is a bug, do not comment.
 
 ---
 

@@ -221,6 +221,41 @@ def cmd_init(args: argparse.Namespace) -> None:
     )
 
 
+def _augment_secondary_dimensions(
+    suggestions: list[dict[str, Any]],
+    beliefs: dict[str, Any],
+    dimensions_config: dict[str, Any],
+) -> None:
+    """Add hypothesis details and current posterior to secondary dimension suggestions.
+
+    Mutates each entry in-place to add:
+    - ``hypotheses_detail``: list of ``{id, name, description}`` for the target dimension
+    - ``current_posterior``: current probability distribution over hypotheses
+
+    These fields enrich the ``next-question`` CLI output so Claude can perform
+    inline posterior estimation on secondary dimensions, instead of only seeing
+    opaque hypothesis IDs from presheaf output.
+
+    Args:
+        suggestions: Output of ``suggest_secondary_dimensions`` (mutated in-place)
+        beliefs: Current belief state keyed by dimension ID
+        dimensions_config: Full dimensions config dict from session config
+    """
+    for entry in suggestions:
+        sec_dim_id = str(entry["dimension"])
+        sec_dim_config = dimensions_config.get(sec_dim_id, {})
+        sec_beliefs = beliefs.get(sec_dim_id)
+        entry["hypotheses_detail"] = [
+            {
+                "id": hyp_id,
+                "name": hyp_data["name"],
+                "description": hyp_data["description"],
+            }
+            for hyp_id, hyp_data in sec_dim_config.get("hypotheses", {}).items()
+        ]
+        entry["current_posterior"] = sec_beliefs.posterior if sec_beliefs else {}
+
+
 def cmd_next_question(args: argparse.Namespace) -> None:
     """Select next question to ask."""
     orch = load_session_state(args.session_id)
@@ -289,16 +324,15 @@ def cmd_next_question(args: argparse.Namespace) -> None:
     dim_config = orch.config["dimensions"][dimension]
 
     # Extract hypothesis information for context
-    hypotheses_info = []
-    for hyp_id, hyp_data in dim_config.get("hypotheses", {}).items():
-        hypotheses_info.append(
-            {
-                "id": hyp_id,
-                "name": hyp_data["name"],
-                "description": hyp_data["description"],
-                "focus_areas": hyp_data["focus_areas"],
-            }
-        )
+    hypotheses_info = [
+        {
+            "id": hyp_id,
+            "name": hyp_data["name"],
+            "description": hyp_data["description"],
+            "focus_areas": hyp_data["focus_areas"],
+        }
+        for hyp_id, hyp_data in dim_config.get("hypotheses", {}).items()
+    ]
 
     # BALD decomposition for selected dimension
     hs = orch.beliefs[dimension]
@@ -347,6 +381,9 @@ def cmd_next_question(args: argparse.Namespace) -> None:
     # Secondary dimension suggestions via presheaf
     suggested_secondary = orch.presheaf_checker.suggest_secondary_dimensions(
         dimension, orch.beliefs
+    )
+    _augment_secondary_dimensions(
+        suggested_secondary, orch.beliefs, orch.config["dimensions"]
     )
 
     # Theoretical maximum IG for a single question given current alpha state
